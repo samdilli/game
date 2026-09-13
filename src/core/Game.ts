@@ -127,8 +127,10 @@ export class Game {
     const assets = await resolveCharacterAssets();
     this.assetSourceLabel =
       assets.source === 'quaternius'
-        ? 'Quaternius karakterler aktif'
-        : 'Dev modu: capsule modeller — Quaternius GLB için public/assets/README.md';
+        ? 'Quaternius karakterler (CC0) + UAL2 animasyonlar'
+        : assets.source === 'kenney'
+          ? 'Kenney Mini Characters (CC0) — polis/hırsız/NPC modelleri'
+          : 'Dev modu: capsule modeller — npm run fetch-assets';
 
     this.transitionTo(GameState.Menu);
     this.ui!.showMenu(() => {

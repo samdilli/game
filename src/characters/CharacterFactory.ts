@@ -1,7 +1,7 @@
 import { Color3, StandardMaterial, Vector3, type AbstractMesh, type Scene } from '@babylonjs/core';
 import type { AssetManager } from '@/engine/AssetManager';
 import type { ResolvedCharacterAssets } from '@/config/assets';
-import { CHARACTER_SPAWN } from '@/config/assets';
+import { CHARACTER_SPAWN, pickRoleModelUrl } from '@/config/assets';
 import type { CharacterRole } from '@/world/CityData';
 import { Character } from '@/characters/Character';
 import { CharacterMovement } from '@/characters/Character';
@@ -88,19 +88,20 @@ export class CharacterFactory {
     options: SpawnCharacterOptions,
     enablePhysics: boolean,
   ): Promise<Character> {
-    if (!assets.modelUrl) {
+    const modelUrl = pickRoleModelUrl(assets, options.role, options.id);
+    if (!modelUrl) {
       throw new Error('GLB modelUrl eksik');
     }
 
     const instance = await this.assetManager.instantiateCharacter(
-      assets.modelUrl,
+      modelUrl,
       scene,
       options.instanceName,
     );
 
     let animationGroups = instance.animationGroups;
 
-    if (assets.animationLibraryUrl) {
+    if (assets.mergeExternalAnimations && assets.animationLibraryUrl) {
       const merged = await this.assetManager.mergeAnimationLibrary(
         assets.animationLibraryUrl,
         instance.rootMesh,

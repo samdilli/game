@@ -1,72 +1,60 @@
-# Asset Yol Haritası — Ne Zaman Ne Gerekir?
+# Asset Yol Haritası — CC0 Karakter Paketleri
 
-Bu dosya **hangi asset'in hangi milestone'da ihtiyaç olduğunu** listeler. Quaternius yokken oyun **capsule placeholder** modeller kullanır (ölçek garantili). Quaternius ekleyince otomatik GLB'ye geçer.
+Oyun **otomatik olarak** mevcut paketleri algılar. Öncelik:
 
----
-
-## ✅ Şimdi (isteğe bağlı — görsel kalite)
-
-| Asset | Kaynak | Hedef path | Neden |
-|-------|--------|------------|-------|
-| Universal Base Characters [Standard] | [itch.io](https://quaternius.itch.io/universal-base-characters) | `public/assets/characters/quaternius/Regular_Male.glb` | İnsan karakterler (polis/hırsız/NPC) |
-| UAL2 [Standard, root motion **kapalı**] | [itch.io](https://quaternius.itch.io/universal-animation-library-2) | `public/assets/animations/quaternius/UAL2_Standard.glb` | Yürüme/koşma/tutuklama animasyonları |
-
-> İkinci karakter modeli (hırsız farklı görünsün): `Regular_Male.glb` yanına `Regular_Female.glb` veya farklı proportion eklenebilir — kod bunu Milestone 4+ ile destekleyecek.
-
-**Şimdilik zorunlu değil.** Ekleyince otomatik devreye girer.
+1. **Quaternius Universal Base Characters** (Regular_Male / Regular_Female)
+2. **Kenney Mini Characters** (repo'ya dahil — hemen çalışır)
+3. **Quaternius Mannequin + UAL2** (animasyon kütüphanesi)
+4. Capsule placeholder
 
 ---
 
-## Milestone 4 (şu an — yeni asset gerekmez)
+## Repo'ya dahil (CC0)
 
-Tutuklama + polis vs hırsız modu mevcut GLB + `E` etkileşimi ile çalışır.
+| Paket | Lisans | Path | Rol |
+|-------|--------|------|-----|
+| [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) | CC0 | `characters/kenney/character-male-a.glb` | Polis |
+| Kenney | CC0 | `characters/kenney/character-female-a.glb` | Hırsız |
+| Kenney | CC0 | `characters/kenney/character-*-b/c.glb` | NPC çeşitliliği |
+| [Quaternius UAL2 Standard](https://quaternius.itch.io/universal-animation-library-2) | CC0 | `animations/quaternius/UAL2_Standard.glb` | Quaternius rig animasyonları |
+| Quaternius UAL2 | CC0 | `characters/quaternius/Mannequin_F.glb` | UBC yokken geçici mesh |
 
-İsteğe bağlı UAL2 clip'leri (yüklemişsen eşleşir):
-- `Arrest`, `Surrender`, `Hands Up` — yoksa idle/walk kullanılır
+Lisans metinleri: `public/assets/licenses/`
 
 ---
 
-## Milestone 6 (Mevcut)
+## İsteğe bağlı — Quaternius Universal Base Characters
 
-| Asset | Kaynak | Hedef path |
+En iyi görünüm için (Kenney yerine veya üstünde):
+
+| Dosya | Kaynak | Hedef path |
 |-------|--------|------------|
-| Modular City bina GLB | [Quaternius packs](https://quaternius.itch.io/) | `public/assets/world/quaternius/Building_Small.glb` |
-| Büyük bina (opsiyonel) | aynı | `public/assets/world/quaternius/Building_Large.glb` |
+| Regular_Male.glb | [itch.io](https://quaternius.itch.io/universal-base-characters) | `characters/quaternius/Regular_Male.glb` |
+| Regular_Female.glb | aynı paket | `characters/quaternius/Regular_Female.glb` |
 
-Yoksa prosedürel kutular kullanılır. GLB eklenince şehir otomatik zenginleşir.
-
----
-
-## Milestone 5–6 (procedural vaka + yaşayan şehir)
-
-| Asset | Ne zaman | Path önerisi |
-|-------|----------|--------------|
-| UAL2 tam paket | NPC animasyon çeşitliliği artınca | zaten yukarıda |
-| Quaternius City / Modular City | Milestone 6 — prosedürel kutular yerine gerçek binalar | `public/assets/world/quaternius/` |
-| Police equipment props | Milestone 6 polish | `public/assets/props/` |
+Root motion **kapalı** UAL2 sürümü kullanın. UBC eklenince UAL2 animasyonları otomatik merge edilir.
 
 ---
 
-## Milestone 7+ (ileride)
+## Paketleri yeniden indir
 
-| Asset | Ne zaman |
-|-------|----------|
-| Araç GLB'leri (polis araba, sivil araba) | Araç sistemi implement edilince |
-| Ses paketleri (SFX, ambient) | AudioManager polish |
-| KTX2/Basis dokular | Performans optimizasyonu |
-
----
-
-## Kurulum özeti (Quaternius)
-
-```text
-public/assets/
-  characters/quaternius/Regular_Male.glb
-  animations/quaternius/UAL2_Standard.glb
+```bash
+npm run fetch-assets
 ```
 
-Root motion **kapalı** UAL2 sürümünü kullan. Detay: yukarıdaki itch.io linkleri.
+OpenGameArt üzerinden Kenney + Quaternius UAL2 zip'lerini indirir.
 
-## Lisans
+---
 
-Quaternius paketleri **CC0**.
+## Milestone 6 — Dünya
+
+| Asset | Path |
+|-------|------|
+| Quaternius Modular City | `world/quaternius/Building_Small.glb` |
+
+---
+
+## Lisans özeti
+
+- **Kenney** — CC0, credit opsiyonel (kenney.nl)
+- **Quaternius** — CC0, ticari kullanım serbest

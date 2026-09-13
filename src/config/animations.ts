@@ -3,12 +3,12 @@
  * UAL2 uses humanoid clips like Idle, Walk, Run, Sprint (no root motion export recommended for this game).
  */
 export const QUATERNIUS_UAL2_CLIPS = {
-  idle: ['Idle', 'idle', 'IDLE', 'Breathing Idle', 'Standing Idle'],
+  idle: ['Idle', 'idle', 'IDLE', 'Breathing Idle', 'Standing Idle', 'static'],
   walk: ['Walk', 'walk', 'Walking', 'Walk Forward'],
-  run: ['Run', 'run', 'Jog', 'jog', 'Running'],
+  run: ['Run', 'run', 'Jog', 'jog', 'Running', 'walk'],
   sprint: ['Sprint', 'sprint', 'Fast Run', 'Running Fast'],
-  interact: ['Interact', 'Pickup', 'Use Item'],
-  action: ['Punch', 'Attack', 'Action'],
+  interact: ['Interact', 'Pickup', 'Use Item', 'pick-up'],
+  action: ['Punch', 'Attack', 'Action', 'attack-melee-right'],
   arrest: ['Arrest', 'Handcuff', 'Surrender'],
 } as const;
 

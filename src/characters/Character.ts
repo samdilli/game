@@ -1,5 +1,7 @@
 import { Vector3, type AbstractMesh, type Scene } from '@babylonjs/core';
 import type { InputState } from '@/input/InputAction';
+import type { CharacterAnimationController } from '@/characters/CharacterAnimationController';
+import type { CharacterPhysicsBody } from '@/physics/CharacterPhysicsBody';
 
 export interface CharacterMovementConfig {
   moveSpeed: number;
@@ -38,7 +40,6 @@ export class CharacterMovement {
 
     mesh.position.x = clamp(mesh.position.x + dx, -this.config.worldHalfSize, this.config.worldHalfSize);
     mesh.position.z = clamp(mesh.position.z + dz, -this.config.worldHalfSize, this.config.worldHalfSize);
-    mesh.position.y = 0.9;
 
     this.velocity.set(dx / Math.max(dt, 0.0001), 0, dz / Math.max(dt, 0.0001));
   }
@@ -55,6 +56,8 @@ export interface CharacterConfig {
   scene: Scene;
   mesh: AbstractMesh;
   movement: CharacterMovement;
+  animation?: CharacterAnimationController;
+  physics?: CharacterPhysicsBody;
 }
 
 export class Character {
@@ -63,6 +66,8 @@ export class Character {
   readonly role: 'police' | 'thief';
   readonly mesh: AbstractMesh;
   readonly movement: CharacterMovement;
+  readonly animation?: CharacterAnimationController;
+  readonly physics?: CharacterPhysicsBody;
 
   actionActive = false;
 
@@ -72,14 +77,28 @@ export class Character {
     this.role = config.role;
     this.mesh = config.mesh;
     this.movement = config.movement;
+    this.animation = config.animation;
+    this.physics = config.physics;
   }
 
   update(input: InputState, dt: number): void {
     this.movement.update(this.mesh, input, dt);
+    this.animation?.update(this.movement.currentSpeed, this.movement.isSprinting, dt);
+    this.physics?.syncTransform(this.mesh.position, this.mesh.rotation.y);
+
+    if (input.actionPressed) {
+      this.animation?.playAction('action');
+    }
+    if (input.interactPressed) {
+      this.animation?.playAction('interact');
+    }
+
     this.actionActive = input.action;
   }
 
   dispose(): void {
+    this.animation?.dispose();
+    this.physics?.dispose();
     this.mesh.dispose();
   }
 }

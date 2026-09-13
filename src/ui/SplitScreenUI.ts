@@ -11,12 +11,13 @@ export class SplitScreenUI {
     this.root = uiRoot;
   }
 
-  showMenu(onPlay: () => void): void {
+  showMenu(onPlay: () => void, assetHint?: string): void {
     this.root.innerHTML = `
       <div class="menu-overlay interactive">
         <div class="menu-panel">
           <h1>Polis Şehri</h1>
           <p>Baba-oğul split-screen macerası. Polis ve hırsız olarak aynı şehirde yarışın!</p>
+          ${assetHint ? `<p class="asset-hint">${assetHint}</p>` : ''}
           <button class="menu-btn menu-btn-primary" id="btn-play">Oyna</button>
           <div class="controls-info">
             <h3>Oyuncu 1 — Polis (Klavye)</h3>
@@ -39,6 +40,31 @@ export class SplitScreenUI {
     `;
 
     this.root.querySelector('#btn-play')?.addEventListener('click', onPlay);
+  }
+
+  showLoading(message: string): void {
+    this.root.innerHTML = `
+      <div class="menu-overlay interactive">
+        <div class="menu-panel">
+          <h1>Yükleniyor…</h1>
+          <p>${message}</p>
+          <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  showError(message: string, onBack: () => void): void {
+    this.root.innerHTML = `
+      <div class="menu-overlay interactive">
+        <div class="menu-panel">
+          <h1>Hata</h1>
+          <p>${message}</p>
+          <button class="menu-btn menu-btn-secondary" id="btn-back">Menüye Dön</button>
+        </div>
+      </div>
+    `;
+    this.root.querySelector('#btn-back')?.addEventListener('click', onBack);
   }
 
   showGameHud(players: { id: number; role: 'police' | 'thief'; label: string }[]): void {

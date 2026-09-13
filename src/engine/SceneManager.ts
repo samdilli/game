@@ -12,6 +12,7 @@ import '@babylonjs/core/Materials/Textures/cubeTexture';
 import '@babylonjs/core/Helpers/sceneHelpers';
 import { engineConfig } from '@/config/engine-config';
 import type { BabylonEngineInstance } from '@/engine/EngineBootstrap';
+import { addStaticBoxPhysics } from '@/physics/CharacterPhysicsBody';
 
 export interface SceneManagerOptions {
   worldSize: number;
@@ -88,6 +89,11 @@ export class SceneManager {
         box.material = mat;
       }
     }
+  }
+
+  enablePhysicsColliders(): void {
+    if (!engineConfig.features.physics || !this.ground) return;
+    addStaticBoxPhysics(this.ground, this.scene);
   }
 
   dispose(): void {

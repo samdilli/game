@@ -4,7 +4,7 @@
  */
 export const engineConfig = {
   features: {
-    physics: false,
+    physics: true,
     renderingPipeline: false,
     environment: true,
   },

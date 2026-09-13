@@ -1,5 +1,8 @@
 import { createGame } from '@/core/Game';
 
+// Register glTF loader plugin (required before any GLB load)
+import '@babylonjs/loaders/glTF';
+
 const canvas = document.getElementById('game-canvas') as HTMLCanvasElement | null;
 const uiRoot = document.getElementById('ui-root') as HTMLElement | null;
 

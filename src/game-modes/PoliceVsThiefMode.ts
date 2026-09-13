@@ -1,9 +1,13 @@
 import type { EventBus } from '@/core/EventBus';
 import { CaseManager } from '@/cases/CaseManager';
-import { POLICE_VS_THIEF_CASE } from '@/cases/CaseDefinition';
+import { generatePoliceVsThiefCase } from '@/cases/CaseGenerator';
+import type { CaseDefinition } from '@/cases/CaseDefinition';
 import { ArrestSystem, isAtPoi } from '@/systems/ArrestSystem';
 import { poiById } from '@/world/CityData';
+import { bearingDegrees, compassArrow } from '@/world/ObjectiveMarkers';
 import type { GameMode, GameModeContext, GameModeHud } from '@/game-modes/GameMode';
+
+const INVESTIGATE_RADIUS = 8;
 
 export class PoliceVsThiefMode implements GameMode {
   readonly id = 'police_vs_thief';
@@ -11,22 +15,38 @@ export class PoliceVsThiefMode implements GameMode {
 
   private readonly caseManager: CaseManager;
   private readonly arrestSystem: ArrestSystem;
+  private activeCase?: CaseDefinition;
   private resultMessage?: string;
 
-  constructor(eventBus: EventBus) {
+  constructor(eventBus: EventBus, caseDef?: CaseDefinition) {
     this.caseManager = new CaseManager(eventBus);
     this.arrestSystem = new ArrestSystem(eventBus);
+    this.presetCase = caseDef;
   }
 
+  private readonly presetCase?: CaseDefinition;
+
   start(): void {
-    this.caseManager.start(POLICE_VS_THIEF_CASE);
+    this.activeCase = this.presetCase ?? generatePoliceVsThiefCase();
+    this.caseManager.start(this.activeCase);
     this.resultMessage = undefined;
   }
 
+  getActiveCase(): CaseDefinition | undefined {
+    return this.activeCase;
+  }
+
   update(ctx: GameModeContext): GameModeHud {
-    const hideout = poiById(POLICE_VS_THIEF_CASE.escapePoiId);
+    const caseDef = this.activeCase;
+    const hideout = caseDef ? poiById(caseDef.escapePoiId) : undefined;
+    const crime = caseDef ? poiById(caseDef.crimePoiId) : undefined;
+
     const thiefEscaped = hideout
       ? isAtPoi(ctx.thief.mesh.position, hideout, 4)
+      : false;
+
+    const crimeSceneInvestigated = crime
+      ? isAtPoi(ctx.police.mesh.position, crime, INVESTIGATE_RADIUS)
       : false;
 
     const arrestState = this.arrestSystem.update(
@@ -41,6 +61,7 @@ export class PoliceVsThiefMode implements GameMode {
       thiefPosition: ctx.thief.mesh.position,
       arrestCompleted: arrestState.completed,
       thiefEscaped,
+      crimeSceneInvestigated,
     });
 
     const snapshot = this.caseManager.getSnapshot();
@@ -49,35 +70,57 @@ export class PoliceVsThiefMode implements GameMode {
       ? distanceXZ(ctx.thief.mesh.position, hideout)
       : 0;
 
+    const escalation = Boolean(
+      snapshot && snapshot.status === 'active' && snapshot.timeRemainingSeconds <= 45,
+    );
+
     if (snapshot?.status === 'completed') {
       this.resultMessage = 'Polis kazandı — hırsız tutuklandı!';
     } else if (snapshot?.status === 'failed') {
       this.resultMessage = thiefEscaped
-        ? 'Hırsız kazandı — saklanma noktasına ulaştı!'
+        ? `Hırsız kazandı — ${hideout?.label ?? 'saklanma noktası'}na ulaştı!`
         : 'Süre doldu — hırsız kaçtı!';
     }
 
     const finished = snapshot?.status === 'completed' || snapshot?.status === 'failed';
 
     let policeHint = `Hırsıza mesafe: ${Math.round(distToThief)}m`;
-    if (arrestState.inRange) {
+    if (!crimeSceneInvestigated && crime) {
+      policeHint = `Olay yerine git: ${crime.label} (${Math.round(distanceXZ(ctx.police.mesh.position, crime))}m)`;
+    } else if (arrestState.inRange) {
       policeHint = arrestState.progressing
         ? 'Tutuklama devam ediyor — E veya Space basılı tut'
         : 'Yakındasın! E veya Space ile tutukla';
     } else if (distToThief > 25) {
-      policeHint = 'Hırsızı ara — güneydoğuya bak';
+      policeHint = 'Hırsızı takip et — pusulayı kullan';
     }
 
+    const escapeLabel = hideout?.label ?? 'Saklanma noktası';
     let thiefHint = hideout
-      ? `Saklanma noktası: ${Math.round(distToHideout)}m (güneydoğu)`
+      ? `${escapeLabel}: ${Math.round(distToHideout)}m`
       : 'Saklanma noktasına ulaş';
+
+    if (escalation) {
+      thiefHint += ' · ACİL!';
+    }
+
+    const policeCompass = compassArrow(
+      bearingDegrees(ctx.police.mesh.position, ctx.thief.mesh.position),
+    );
+    const thiefCompass = hideout
+      ? compassArrow(bearingDegrees(ctx.thief.mesh.position, hideout))
+      : '↑';
 
     return {
       caseSnapshot: snapshot,
       arrestState,
-      thiefObjective: 'Saklanma noktasına ulaş (harita güneydoğu)',
+      thiefObjective: `${escapeLabel} yönüne kaç`,
       policeHint,
       thiefHint,
+      policeCompass,
+      thiefCompass,
+      briefing: caseDef?.briefing,
+      escalationActive: escalation,
       resultMessage: this.resultMessage,
       showRestart: finished,
     };
@@ -91,6 +134,7 @@ export class PoliceVsThiefMode implements GameMode {
   dispose(): void {
     this.caseManager.dispose();
     this.arrestSystem.reset();
+    this.activeCase = undefined;
   }
 }
 

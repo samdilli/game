@@ -15,6 +15,10 @@ export interface GameModeHud {
   thiefObjective: string;
   policeHint?: string;
   thiefHint?: string;
+  policeCompass?: string;
+  thiefCompass?: string;
+  briefing?: string;
+  escalationActive?: boolean;
   resultMessage?: string;
   showRestart?: boolean;
 }

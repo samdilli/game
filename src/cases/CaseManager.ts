@@ -54,6 +54,10 @@ export class CaseManager {
       return;
     }
 
+    if (ctx.crimeSceneInvestigated) {
+      this.completeObjective('investigate');
+    }
+
     const dist = distanceXZ(ctx.policePosition, ctx.thiefPosition);
     if (dist <= 15) {
       this.activateObjective('approach');

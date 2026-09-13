@@ -18,6 +18,7 @@ export interface CaseDefinition {
   timeLimitSeconds: number;
   crimePoiId: string;
   escapePoiId: string;
+  seed?: number;
 }
 
 export interface CaseObjectiveState {
@@ -42,6 +43,7 @@ export interface CaseUpdateContext {
   thiefPosition: Vector3;
   arrestCompleted: boolean;
   thiefEscaped: boolean;
+  crimeSceneInvestigated?: boolean;
 }
 
 export const POLICE_VS_THIEF_CASE: CaseDefinition = {

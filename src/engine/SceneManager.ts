@@ -13,6 +13,8 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import { engineConfig } from '@/config/engine-config';
 import type { BabylonEngineInstance } from '@/engine/EngineBootstrap';
 import { addStaticBoxPhysics } from '@/physics/CharacterPhysicsBody';
+import { CityBuilder } from '@/world/CityBuilder';
+import type { CityBuildResult } from '@/world/CityData';
 
 export interface SceneManagerOptions {
   worldSize: number;
@@ -20,6 +22,7 @@ export interface SceneManagerOptions {
 
 export class SceneManager {
   readonly scene: Scene;
+  readonly city: CityBuildResult;
 
   private ground?: AbstractMesh;
 
@@ -30,7 +33,8 @@ export class SceneManager {
       this.scene.createDefaultEnvironment({ createGround: false, createSkybox: true });
     }
     this.buildLighting();
-    this.buildEnvironment(options.worldSize);
+    this.ground = this.buildGround(options.worldSize);
+    this.city = CityBuilder.build(this.scene, options.worldSize);
   }
 
   private buildLighting(): void {
@@ -41,11 +45,11 @@ export class SceneManager {
 
     const sun = new DirectionalLight('sun', new Vector3(-0.6, -1, -0.4), this.scene);
     sun.intensity = 0.85;
-    sun.position = new Vector3(40, 80, 30);
+    sun.position.set(40, 80, 30);
   }
 
-  private buildEnvironment(worldSize: number): void {
-    this.ground = MeshBuilder.CreateGround(
+  private buildGround(worldSize: number): AbstractMesh {
+    const ground = MeshBuilder.CreateGround(
       'ground',
       { width: worldSize, height: worldSize, subdivisions: 4 },
       this.scene,
@@ -54,41 +58,10 @@ export class SceneManager {
     const groundMat = new StandardMaterial('groundMat', this.scene);
     groundMat.diffuseColor = new Color3(0.32, 0.55, 0.28);
     groundMat.specularColor = new Color3(0.05, 0.05, 0.05);
-    this.ground.material = groundMat;
-    this.ground.receiveShadows = true;
-
-    this.buildCityBlocks(worldSize);
-  }
-
-  private buildCityBlocks(worldSize: number): void {
-    const blockMat = new StandardMaterial('blockMat', this.scene);
-    blockMat.diffuseColor = new Color3(0.55, 0.58, 0.62);
-
-    const roadMat = new StandardMaterial('roadMat', this.scene);
-    roadMat.diffuseColor = new Color3(0.2, 0.22, 0.25);
-
-    const spacing = 12;
-    const half = worldSize / 2 - 4;
-
-    for (let x = -half; x <= half; x += spacing) {
-      for (let z = -half; z <= half; z += spacing) {
-        if (Math.abs(x) < 6 && Math.abs(z) < 6) continue;
-
-        const isRoad = Math.abs(x % (spacing * 2)) < 1 || Math.abs(z % (spacing * 2)) < 1;
-        const mat = isRoad ? roadMat : blockMat;
-        const h = isRoad ? 0.15 : 2 + Math.random() * 6;
-        const w = isRoad ? 3 : 4 + Math.random() * 3;
-        const d = isRoad ? 3 : 4 + Math.random() * 3;
-
-        const box = MeshBuilder.CreateBox(
-          `block_${x}_${z}`,
-          { width: w, height: h, depth: d },
-          this.scene,
-        );
-        box.position.set(x, h / 2, z);
-        box.material = mat;
-      }
-    }
+    ground.material = groundMat;
+    ground.receiveShadows = true;
+    ground.metadata = { isObstacle: false, zone: 'road' };
+    return ground;
   }
 
   enablePhysicsColliders(): void {

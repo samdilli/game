@@ -20,6 +20,8 @@ import { InputMapping } from '@/input/InputMapping';
 import { KeyboardInput } from '@/input/KeyboardInput';
 import { GamepadInput } from '@/input/GamepadInput';
 import { SplitScreenUI } from '@/ui/SplitScreenUI';
+import { NavigationManager } from '@/navigation/NavigationManager';
+import { NPCManager } from '@/npc/NPCManager';
 
 export class Game {
   private config: GameConfig;
@@ -34,6 +36,8 @@ export class Game {
   private physicsManager?: PhysicsManager;
   private assetManager?: AssetManager;
   private characterFactory?: CharacterFactory;
+  private navigationManager?: NavigationManager;
+  private npcManager?: NPCManager;
   private devTools?: DevTools;
   private gameLoop?: GameLoop;
   private ui?: SplitScreenUI;
@@ -133,11 +137,25 @@ export class Game {
   private async startGame(): Promise<void> {
     if (!this.ready || this.state === GameState.Playing) return;
 
-    this.ui?.showLoading('Karakter modelleri ve animasyonlar yükleniyor…');
+    this.ui?.showLoading('Karakterler, animasyonlar ve şehir NPC\'leri yükleniyor…');
 
     try {
       const assets = await resolveCharacterAssets();
       await this.buildPlayers(assets);
+
+      this.navigationManager = new NavigationManager(this.sceneManager!.city);
+      this.npcManager = new NPCManager(
+        this.sceneManager!.scene,
+        this.navigationManager,
+        this.eventBus,
+        this.characterFactory!,
+      );
+      await this.npcManager.spawnPopulation(
+        assets,
+        this.config.worldSize / 2 - 2,
+        this.sessions.map((s) => s.character),
+      );
+
       this.transitionTo(GameState.Playing);
       this.eventBus.emit('GameStarted', undefined);
 
@@ -257,13 +275,16 @@ export class Game {
       this.ui?.updateHud(session.player.id, session.character, session.inputDevice);
     }
 
+    const playerChars = this.sessions.map((s) => s.character);
+    this.npcManager?.update(dt, playerChars);
+
     if (this.babylon) {
       this.devTools?.updateFps(this.babylon.engine);
     }
 
     if (this.debugEnabled) {
       this.ui?.showDebug(
-        `FPS: ${this.babylon?.getFps()} | ${this.babylon?.backend} | ${this.assetSourceLabel}`,
+        `FPS: ${this.babylon?.getFps()} | ${this.babylon?.backend} | NPC: ${this.npcManager?.getActiveCount() ?? 0} | ${this.assetSourceLabel}`,
       );
     }
   }
@@ -292,6 +313,8 @@ export class Game {
     window.removeEventListener('gamepadconnected', this.boundGamepadConnected);
     window.removeEventListener('gamepaddisconnected', this.boundGamepadDisconnected);
     this.disposePlayers();
+    this.npcManager?.dispose();
+    this.navigationManager?.clear();
     this.inputManager?.dispose();
     this.sceneManager?.dispose();
     this.babylon?.dispose();

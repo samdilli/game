@@ -2,6 +2,7 @@ import { Color3, StandardMaterial, Vector3, type AbstractMesh, type Scene } from
 import type { AssetManager } from '@/engine/AssetManager';
 import type { ResolvedCharacterAssets } from '@/config/assets';
 import { CHARACTER_SPAWN } from '@/config/assets';
+import type { CharacterRole } from '@/world/CityData';
 import { Character } from '@/characters/Character';
 import { CharacterMovement } from '@/characters/Character';
 import { CharacterAnimationController } from '@/characters/CharacterAnimationController';
@@ -11,7 +12,7 @@ import { engineConfig } from '@/config/engine-config';
 export interface SpawnCharacterOptions {
   id: number;
   name: string;
-  role: 'police' | 'thief';
+  role: CharacterRole;
   instanceName: string;
   position: Vector3;
   moveSpeed: number;
@@ -76,6 +77,14 @@ export class CharacterFactory {
       animation,
       physics,
     });
+  }
+
+  spawnNpc(
+    scene: Scene,
+    assets: ResolvedCharacterAssets,
+    options: SpawnCharacterOptions,
+  ): Promise<Character> {
+    return this.spawn(scene, assets, options);
   }
 }
 

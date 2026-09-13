@@ -10,7 +10,34 @@ Baba-oğul için tarayıcı tabanlı, low-poly polis/hırsız split-screen oyunu
 - **Havok Physics** altyapısı hazır (Milestone 2'de aktif)
 - **glTF/GLB** yükleme altyapısı (`AssetManager`)
 
-## Milestone 1 (Mevcut)
+## Milestone 3 (Mevcut)
+
+- [x] Deterministik şehir + semantic POI'ler (polis merkezi, park, market, saklanma noktası…)
+- [x] A* grid navigasyon + path follower (stuck detection, yeniden rota)
+- [x] NPC: perception (görüş + işitme + line-of-sight), memory, state machine
+- [x] 6 sivil (POI devriyesi, tehditte kaçış) + 1 şüpheli NPC (suç → kaçış → saklanma)
+- [x] LOD simulation (yakın/orta/uzak tick aralıkları)
+- [x] EventBus: `NPCWitnessedCrime`, `NPCCalledPolice`, `SuspectSeen`…
+
+## Milestone 2
+
+- [x] GLB asset pipeline (`AssetManager`, `CharacterFactory`)
+- [x] Quaternius UAL2 animasyon eşleme altyapısı (`config/animations.ts`)
+- [x] Hız tabanlı animasyon state machine + blend
+- [x] Havok physics (statik zemin + karakter capsule)
+- [x] Dev fallback: `CesiumMan.glb` (Quaternius yokken)
+- [x] Asset doğrulama (GLB magic byte — Vite HTML fallback koruması)
+
+## Quaternius Asset Kurulumu
+
+Detaylar: `public/assets/README.md`
+
+1. [Universal Base Characters](https://quaternius.itch.io/universal-base-characters) → `public/assets/characters/quaternius/Regular_Male.glb`
+2. [Universal Animation Library 2](https://quaternius.itch.io/universal-animation-library-2) → `public/assets/animations/quaternius/UAL2_Standard.glb`
+
+Root motion **kapalı** sürümü tercih edin.
+
+## Milestone 1
 
 - [x] Modüler oyun mimarisi (EventBus, input abstraction, split-screen)
 - [x] bp900 tarzı engine bootstrap (WebGPU/WebGL2, Inspector, FPS)

@@ -2,6 +2,7 @@ import { Vector3, type AbstractMesh, type Scene } from '@babylonjs/core';
 import type { InputState } from '@/input/InputAction';
 import type { CharacterAnimationController } from '@/characters/CharacterAnimationController';
 import type { CharacterPhysicsBody } from '@/physics/CharacterPhysicsBody';
+import type { CharacterRole } from '@/world/CityData';
 
 export interface CharacterMovementConfig {
   moveSpeed: number;
@@ -17,6 +18,11 @@ export class CharacterMovement {
   currentSpeed = 0;
 
   constructor(private config: CharacterMovementConfig) {}
+
+  setSpeeds(moveSpeed: number, sprintMultiplier: number): void {
+    this.config.moveSpeed = moveSpeed;
+    this.config.sprintMultiplier = sprintMultiplier;
+  }
 
   update(mesh: AbstractMesh, input: InputState, dt: number): void {
     const speed = input.sprint
@@ -52,7 +58,7 @@ function clamp(value: number, min: number, max: number): number {
 export interface CharacterConfig {
   id: number;
   name: string;
-  role: 'police' | 'thief';
+  role: CharacterRole;
   scene: Scene;
   mesh: AbstractMesh;
   movement: CharacterMovement;
@@ -63,7 +69,7 @@ export interface CharacterConfig {
 export class Character {
   readonly id: number;
   readonly name: string;
-  readonly role: 'police' | 'thief';
+  readonly role: CharacterRole;
   readonly mesh: AbstractMesh;
   readonly movement: CharacterMovement;
   readonly animation?: CharacterAnimationController;

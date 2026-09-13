@@ -1,4 +1,5 @@
 import type { InputDevice } from '@/input/InputDevice';
+import type { Vector3 } from '@babylonjs/core';
 
 export type GameEventMap = {
   GameStarted: void;
@@ -8,6 +9,11 @@ export type GameEventMap = {
   GamepadConnected: { id: string; index: number };
   GamepadDisconnected: { id: string; index: number };
   DebugToggled: { enabled: boolean };
+  NPCWitnessedCrime: { npcId: number; suspectId: number; location: Vector3 };
+  NPCCalledPolice: { npcId: number; location: Vector3 };
+  NPCFleeStarted: { npcId: number; reason: string };
+  SuspectSeen: { suspectId: number; location: Vector3 };
+  PlayerEnteredZone: { playerId: number; zoneId: string };
 };
 
 type EventHandler<T> = (payload: T) => void;

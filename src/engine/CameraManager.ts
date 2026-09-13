@@ -10,6 +10,7 @@ import {
 } from '@babylonjs/core';
 import type { SplitLayout } from '@/config/game';
 import { getCharacterFocusPoint } from '@/characters/CharacterMeshUtils';
+import { getCapsuleFocusPoint } from '@/characters/PrimitiveCharacter';
 
 export interface PlayerCameraConfig {
   playerId: number;
@@ -17,6 +18,13 @@ export interface PlayerCameraConfig {
   splitLayout: SplitLayout;
   viewportIndex: number;
   viewportCount: number;
+}
+
+function focusPoint(target: AbstractMesh): Vector3 {
+  if (target.metadata?.isCharacter) {
+    return getCapsuleFocusPoint(target);
+  }
+  return getCharacterFocusPoint(target);
 }
 
 export class CameraManager {
@@ -28,7 +36,7 @@ export class CameraManager {
       -Math.PI / 2,
       Math.PI / 2.8,
       10,
-      getCharacterFocusPoint(config.target),
+      focusPoint(config.target),
       scene,
     );
     cam.lowerRadiusLimit = 5;
@@ -50,7 +58,7 @@ export class CameraManager {
       const cam = this.cameras[i];
       const target = targets[i];
       if (!target) continue;
-      cam.setTarget(getCharacterFocusPoint(target));
+      cam.setTarget(focusPoint(target));
     }
   }
 

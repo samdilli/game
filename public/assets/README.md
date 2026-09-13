@@ -1,6 +1,6 @@
 # Asset Yol Haritası — Ne Zaman Ne Gerekir?
 
-Bu dosya **hangi asset'in hangi milestone'da ihtiyaç olduğunu** listeler. Şu an oyun **CesiumMan dev fallback** ile çalışır; Quaternius eklemeden de test edebilirsin.
+Bu dosya **hangi asset'in hangi milestone'da ihtiyaç olduğunu** listeler. Quaternius yokken oyun **capsule placeholder** modeller kullanır (ölçek garantili). Quaternius ekleyince otomatik GLB'ye geçer.
 
 ---
 

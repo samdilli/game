@@ -38,21 +38,39 @@ describe('resolveCharacterAssets', () => {
     vi.restoreAllMocks();
   });
 
-  it('falls back to dev character when quaternius missing', async () => {
+  it('uses primitive capsules when quaternius missing', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockImplementation(async (url: string) => {
-        const isDev = url.includes('dev/CesiumMan');
-        return {
-          ok: true,
-          headers: { get: () => (isDev ? 'model/gltf-binary' : 'text/html') },
-          arrayBuffer: async () => new TextEncoder().encode(isDev ? 'glTF' : '<!DO').buffer,
-        };
+      vi.fn().mockResolvedValue({
+        ok: false,
+        headers: { get: () => 'text/html' },
+        arrayBuffer: async () => new ArrayBuffer(0),
       }),
     );
 
     const assets = await resolveCharacterAssets();
     expect(assets.source).toBe('dev-fallback');
-    expect(assets.modelUrl).toBe(ASSET_PATHS.devFallbackCharacter);
+    expect(assets.visual).toBe('primitive');
+    expect(assets.modelUrl).toBeUndefined();
+  });
+
+  it('uses quaternius glb when present', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async (url: string) => ({
+        ok: true,
+        headers: {
+          get: () =>
+            String(url).includes('quaternius') ? 'model/gltf-binary' : 'text/html',
+        },
+        arrayBuffer: async () =>
+          new TextEncoder().encode(String(url).includes('quaternius') ? 'glTF' : '<!DO').buffer,
+      })),
+    );
+
+    const assets = await resolveCharacterAssets();
+    expect(assets.source).toBe('quaternius');
+    expect(assets.visual).toBe('glb');
+    expect(assets.modelUrl).toBe(ASSET_PATHS.quaterniusBaseCharacter);
   });
 });

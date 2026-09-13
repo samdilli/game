@@ -12,6 +12,7 @@ import {
   placeCharacterOnGround,
   setCharacterXZ,
 } from '@/characters/CharacterMeshUtils';
+import { createCapsuleCharacter } from '@/characters/PrimitiveCharacter';
 import { CharacterPhysicsBody } from '@/physics/CharacterPhysicsBody';
 import { engineConfig } from '@/config/engine-config';
 
@@ -35,6 +36,55 @@ export class CharacterFactory {
     assets: ResolvedCharacterAssets,
     options: SpawnCharacterOptions,
   ): Promise<Character> {
+    if (assets.visual === 'primitive') {
+      return this.spawnPrimitive(scene, options);
+    }
+    return this.spawnGlb(scene, assets, options);
+  }
+
+  spawnNpc(
+    scene: Scene,
+    assets: ResolvedCharacterAssets,
+    options: SpawnCharacterOptions,
+  ): Promise<Character> {
+    return this.spawn(scene, assets, options);
+  }
+
+  private spawnPrimitive(scene: Scene, options: SpawnCharacterOptions): Character {
+    const tint = new Color3(options.tint.r, options.tint.g, options.tint.b);
+    const mesh = createCapsuleCharacter(scene, options.instanceName, tint, options.position);
+
+    const movement = new CharacterMovement({
+      moveSpeed: options.moveSpeed,
+      sprintMultiplier: options.sprintMultiplier,
+      worldHalfSize: options.worldHalfSize,
+    });
+
+    let physics: CharacterPhysicsBody | undefined;
+    if (engineConfig.features.physics) {
+      physics = new CharacterPhysicsBody(mesh, scene);
+    }
+
+    return new Character({
+      id: options.id,
+      name: options.name,
+      role: options.role,
+      scene,
+      mesh,
+      movement,
+      physics,
+    });
+  }
+
+  private async spawnGlb(
+    scene: Scene,
+    assets: ResolvedCharacterAssets,
+    options: SpawnCharacterOptions,
+  ): Promise<Character> {
+    if (!assets.modelUrl) {
+      throw new Error('GLB modelUrl eksik');
+    }
+
     const instance = await this.assetManager.instantiateCharacter(
       assets.modelUrl,
       scene,
@@ -85,14 +135,6 @@ export class CharacterFactory {
       animation,
       physics,
     });
-  }
-
-  spawnNpc(
-    scene: Scene,
-    assets: ResolvedCharacterAssets,
-    options: SpawnCharacterOptions,
-  ): Promise<Character> {
-    return this.spawn(scene, assets, options);
   }
 }
 

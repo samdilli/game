@@ -48,7 +48,7 @@ export const THIEF_NPC_ARCHETYPE: NPCArchetypeConfig = {
 };
 
 export const NPC_SPAWN_CONFIG = {
-  civilianCount: 4,
+  civilianCount: 3,
   includeThiefNpc: true,
   lod0Distance: 24,
   lod1Distance: 44,

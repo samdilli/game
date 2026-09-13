@@ -113,7 +113,7 @@ export class Game {
     this.assetSourceLabel =
       assets.source === 'quaternius'
         ? 'Quaternius karakterler aktif'
-        : 'Dev modu: CesiumMan kullanılıyor — Quaternius için public/assets/README.md';
+        : 'Dev modu: capsule modeller — Quaternius GLB için public/assets/README.md';
 
     this.transitionTo(GameState.Menu);
     this.ui!.showMenu(() => void this.startGame(), this.assetSourceLabel);

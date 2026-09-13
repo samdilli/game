@@ -9,6 +9,7 @@ export const QUATERNIUS_UAL2_CLIPS = {
   sprint: ['Sprint', 'sprint', 'Fast Run', 'Running Fast'],
   interact: ['Interact', 'Pickup', 'Use Item'],
   action: ['Punch', 'Attack', 'Action'],
+  arrest: ['Arrest', 'Handcuff', 'Surrender'],
 } as const;
 
 export type LocomotionAnimState = 'idle' | 'walk' | 'run' | 'sprint';

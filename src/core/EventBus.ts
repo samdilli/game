@@ -14,6 +14,11 @@ export type GameEventMap = {
   NPCFleeStarted: { npcId: number; reason: string };
   SuspectSeen: { suspectId: number; location: Vector3 };
   PlayerEnteredZone: { playerId: number; zoneId: string };
+  CaseStarted: { caseId: string; title: string };
+  CaseCompleted: { caseId: string; reason: string };
+  CaseFailed: { caseId: string; reason: string };
+  CaseObjectiveUpdated: { objectiveId: string; status: string };
+  PlayerArrested: { policeId: number; suspectId: number; location: Vector3 };
 };
 
 type EventHandler<T> = (payload: T) => void;

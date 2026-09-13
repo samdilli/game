@@ -10,7 +10,15 @@ Baba-oğul için tarayıcı tabanlı, low-poly polis/hırsız split-screen oyunu
 - **Havok Physics** altyapısı hazır (Milestone 2'de aktif)
 - **glTF/GLB** yükleme altyapısı (`AssetManager`)
 
-## Milestone 3 (Mevcut)
+## Milestone 4 (Mevcut)
+
+- [x] **Polis vs Hırsız** oyun modu
+- [x] Vaka sistemi (hedefler, süre, kazanma/kaybetme)
+- [x] Tutuklama: yakın mesafe + E basılı tut + progress bar
+- [x] Hırsız kazanır: saklanma noktasına ulaş veya süre dolsun
+- [x] Polis kazanır: tutuklamayı tamamla
+
+## Milestone 3
 
 - [x] Deterministik şehir + semantic POI'ler (polis merkezi, park, market, saklanma noktası…)
 - [x] A* grid navigasyon + path follower (stuck detection, yeniden rota)
@@ -73,7 +81,9 @@ src/
   characters/     Character, CharacterMovement
   players/        Player, PlayerController
   ui/             SplitScreenUI
-  config/         game.ts, engine-config.ts, controls.ts
+  navigation/    NavigationGrid, NavigationManager, PathFollower
+  npc/           NPCBrain, NPCPerception, NPCMemory, NPCManager
+  world/         CityBuilder, CityData (POI + semantic zones)
 ```
 
 ## Mimari Kararı
@@ -85,8 +95,8 @@ Tam bp900 şablonu yerine **hibrit yaklaşım** kullanıldı:
 
 Bu sayede Milestone 2+ (animasyon, fizik, NPC, vaka sistemi) bp900 altyapısı üzerinde büyüyebilir.
 
-## Sonraki Adımlar (Milestone 2)
+## Sonraki Adımlar (Milestone 5)
 
-- GLB karakter modelleri ve animasyon state machine
-- Havok physics ile karakter çarpışması
-- Genişletilmiş şehir ve AssetManager entegrasyonu
+- Procedural vaka üretici
+- Event-driven escalation
+- Kanıt sistemi

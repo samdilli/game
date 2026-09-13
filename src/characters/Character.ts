@@ -76,6 +76,7 @@ export class Character {
   readonly physics?: CharacterPhysicsBody;
 
   actionActive = false;
+  private _arrested = false;
 
   constructor(config: CharacterConfig) {
     this.id = config.id;
@@ -87,7 +88,21 @@ export class Character {
     this.physics = config.physics;
   }
 
+  get isArrested(): boolean {
+    return this._arrested;
+  }
+
+  setArrested(value: boolean): void {
+    this._arrested = value;
+    if (value) {
+      this.movement.currentSpeed = 0;
+      this.movement.isMoving = false;
+      this.movement.isSprinting = false;
+    }
+  }
+
   update(input: InputState, dt: number): void {
+    if (this._arrested) return;
     this.movement.update(this.mesh, input, dt);
     this.animation?.update(this.movement.currentSpeed, this.movement.isSprinting, dt);
     this.physics?.syncTransform(this.mesh.position, this.mesh.rotation.y);

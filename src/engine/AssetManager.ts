@@ -4,6 +4,7 @@ import { ImportMeshAsync, SceneLoader } from '@babylonjs/core/Loading/sceneLoade
 import type { AssetContainer } from '@babylonjs/core/assetContainer';
 import type { Scene } from '@babylonjs/core/scene';
 import { retargetAnimationGroupsToSkeleton } from '@/characters/CharacterAnimationController';
+import { resolveCharacterRoot } from '@/characters/CharacterMeshUtils';
 
 export interface LoadedGltfAsset {
   rootMesh: AbstractMesh | null;
@@ -62,7 +63,7 @@ export class AssetManager {
       false,
     );
 
-    const rootMesh = entries.rootNodes[0] as AbstractMesh | undefined;
+    const rootMesh = resolveCharacterRoot(entries.rootNodes);
     if (!rootMesh) {
       throw new Error(`Karakter kök mesh bulunamadı: ${url}`);
     }

@@ -6,6 +6,12 @@ import type { CharacterRole } from '@/world/CityData';
 import { Character } from '@/characters/Character';
 import { CharacterMovement } from '@/characters/Character';
 import { CharacterAnimationController } from '@/characters/CharacterAnimationController';
+import {
+  getSkinnedMesh,
+  normalizeCharacterScale,
+  placeCharacterOnGround,
+  setCharacterXZ,
+} from '@/characters/CharacterMeshUtils';
 import { CharacterPhysicsBody } from '@/physics/CharacterPhysicsBody';
 import { engineConfig } from '@/config/engine-config';
 
@@ -47,9 +53,11 @@ export class CharacterFactory {
       animationGroups = [...animationGroups, ...merged];
     }
 
-    normalizeCharacterScale(instance.rootMesh, CHARACTER_SPAWN.targetHeight);
-    applyTint(instance.rootMesh, new Color3(options.tint.r, options.tint.g, options.tint.b));
-    instance.rootMesh.position.copyFrom(options.position);
+    const root = instance.rootMesh;
+    normalizeCharacterScale(root, CHARACTER_SPAWN.targetHeight);
+    setCharacterXZ(root, options.position.x, options.position.z);
+    placeCharacterOnGround(root, 0);
+    applyTint(getSkinnedMesh(root), new Color3(options.tint.r, options.tint.g, options.tint.b));
 
     const movement = new CharacterMovement({
       moveSpeed: options.moveSpeed,
@@ -64,7 +72,7 @@ export class CharacterFactory {
 
     let physics: CharacterPhysicsBody | undefined;
     if (engineConfig.features.physics) {
-      physics = new CharacterPhysicsBody(instance.rootMesh, scene);
+      physics = new CharacterPhysicsBody(root, scene);
     }
 
     return new Character({
@@ -72,7 +80,7 @@ export class CharacterFactory {
       name: options.name,
       role: options.role,
       scene,
-      mesh: instance.rootMesh,
+      mesh: root,
       movement,
       animation,
       physics,
@@ -88,22 +96,10 @@ export class CharacterFactory {
   }
 }
 
-function normalizeCharacterScale(mesh: AbstractMesh, targetHeight: number): void {
-  mesh.refreshBoundingInfo(true, true);
-  const bounds = mesh.getBoundingInfo();
-  const extend = bounds.boundingBox.extendSizeWorld;
-  const height = Math.max(extend.y * 2, 0.01);
-  const scale = targetHeight / height;
-  mesh.scaling.setAll(scale);
-  mesh.refreshBoundingInfo(true, true);
-
-  const minY = mesh.getBoundingInfo().boundingBox.minimumWorld.y;
-  mesh.position.y -= minY;
-}
-
 function applyTint(root: AbstractMesh, tint: Color3): void {
   const meshes = [root, ...root.getChildMeshes(false)];
   for (const mesh of meshes) {
+    if (!mesh.getTotalVertices()) continue;
     if (!mesh.material) {
       const mat = new StandardMaterial(`${mesh.name}_mat`, root.getScene());
       mat.diffuseColor = tint;

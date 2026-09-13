@@ -9,6 +9,7 @@ import {
   type AbstractMesh,
 } from '@babylonjs/core';
 import type { SplitLayout } from '@/config/game';
+import { getCharacterFocusPoint } from '@/characters/CharacterMeshUtils';
 
 export interface PlayerCameraConfig {
   playerId: number;
@@ -25,13 +26,13 @@ export class CameraManager {
     const cam = new ArcRotateCamera(
       `camera_p${config.playerId}`,
       -Math.PI / 2,
-      Math.PI / 3.2,
-      14,
-      config.target.position.clone(),
+      Math.PI / 2.8,
+      10,
+      getCharacterFocusPoint(config.target),
       scene,
     );
-    cam.lowerRadiusLimit = 8;
-    cam.upperRadiusLimit = 22;
+    cam.lowerRadiusLimit = 5;
+    cam.upperRadiusLimit = 18;
     cam.lowerBetaLimit = 0.4;
     cam.upperBetaLimit = Math.PI / 2.2;
     cam.inertia = 0.08;
@@ -49,7 +50,7 @@ export class CameraManager {
       const cam = this.cameras[i];
       const target = targets[i];
       if (!target) continue;
-      cam.setTarget(target.position.clone());
+      cam.setTarget(getCharacterFocusPoint(target));
     }
   }
 

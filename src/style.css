@@ -1,0 +1,230 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0a0e14;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #e8edf5;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+  touch-action: none;
+}
+
+#ui-root {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+#ui-root .interactive {
+  pointer-events: auto;
+}
+
+.menu-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(15, 25, 40, 0.92), rgba(5, 8, 14, 0.98));
+  pointer-events: auto;
+}
+
+.menu-panel {
+  text-align: center;
+  padding: 2.5rem 3rem;
+  border-radius: 16px;
+  background: rgba(20, 30, 48, 0.85);
+  border: 1px solid rgba(100, 140, 200, 0.25);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+  max-width: 520px;
+}
+
+.menu-panel h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.02em;
+}
+
+.menu-panel p {
+  color: #9ab0cc;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+.menu-btn {
+  display: block;
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  margin-bottom: 0.75rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.menu-btn-primary {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+}
+
+.menu-btn-primary:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.menu-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: #c8d8ef;
+}
+
+.menu-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.controls-info {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: left;
+  font-size: 0.85rem;
+  color: #8aa0bc;
+}
+
+.controls-info h3 {
+  color: #b8cce4;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.controls-info ul {
+  list-style: none;
+  line-height: 1.7;
+}
+
+.split-hud {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  pointer-events: none;
+}
+
+.split-hud-left {
+  left: 0;
+}
+
+.split-hud-right {
+  right: 0;
+}
+
+.split-hud-inner {
+  padding: 1rem 1.25rem;
+}
+
+.player-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.player-badge-police {
+  background: rgba(37, 99, 235, 0.85);
+  border: 1px solid rgba(96, 165, 250, 0.5);
+}
+
+.player-badge-thief {
+  background: rgba(220, 38, 38, 0.85);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+}
+
+.hud-stats {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+}
+
+.split-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.debug-overlay {
+  position: fixed;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 6px;
+  font-family: 'Consolas', monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: #7dd3fc;
+  pointer-events: none;
+}
+
+.gamepad-status {
+  position: fixed;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 6px;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.gamepad-connected {
+  color: #4ade80;
+}
+
+.gamepad-disconnected {
+  color: #f87171;
+}
+
+#display-fps {
+  position: fixed;
+  top: 0.5rem;
+  right: 0.5rem;
+  min-width: 72px;
+  padding: 0.35rem 0.6rem;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 6px;
+  color: #ca7497;
+  font-size: 0.75rem;
+  font-family: 'Consolas', monospace;
+  pointer-events: none;
+  z-index: 20;
+}

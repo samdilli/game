@@ -1,5 +1,6 @@
 import type { Character } from '@/characters/Character';
 import type { InputDevice } from '@/input/InputDevice';
+import type { GameModeHud } from '@/game-modes/GameMode';
 
 export class SplitScreenUI {
   private root: HTMLElement;
@@ -25,7 +26,7 @@ export class SplitScreenUI {
               <li>WASD — Hareket</li>
               <li>Shift — Koş</li>
               <li>Space — Aksiyon</li>
-              <li>E — Etkileşim</li>
+              <li>E — Tutukla (yakın mesafe, basılı tut)</li>
             </ul>
             <h3 style="margin-top: 1rem">Oyuncu 2 — Hırsız (Gamepad)</h3>
             <ul>
@@ -77,6 +78,7 @@ export class SplitScreenUI {
         <div class="split-hud-inner" id="hud-p2"></div>
       </div>
       <div class="gamepad-status" id="gamepad-status"></div>
+      <div class="case-panel" id="case-panel"></div>
     `;
 
     this.leftHud = this.root.querySelector('#hud-p1')!;
@@ -113,6 +115,49 @@ export class SplitScreenUI {
       this.gamepadStatus.textContent = device.isConnected
         ? `🎮 ${device.displayName}`
         : '🎮 Gamepad bağlı değil — USB/Bluetooth ile bağlayın';
+    }
+  }
+
+  updateCaseHud(hud: GameModeHud): void {
+    const panel = this.root.querySelector('#case-panel') as HTMLElement | null;
+    if (!panel || !hud.caseSnapshot) return;
+
+    const c = hud.caseSnapshot;
+    const mins = Math.floor(c.timeRemainingSeconds / 60);
+    const secs = Math.floor(c.timeRemainingSeconds % 60).toString().padStart(2, '0');
+    const objectives = c.objectives
+      .map((o) => {
+        const mark =
+          o.status === 'completed' ? '✓' : o.status === 'active' ? '▶' : '○';
+        return `<li class="obj-${o.status}">${mark} ${o.description}</li>`;
+      })
+      .join('');
+
+    let arrestHtml = '';
+    if (hud.arrestState && hud.arrestState.inRange) {
+      const pct = Math.round(hud.arrestState.progress * 100);
+      arrestHtml = `
+        <div class="arrest-bar-wrap">
+          <div class="arrest-label">Tutuklama ${pct}% — E basılı tut</div>
+          <div class="arrest-bar"><div class="arrest-fill" style="width:${pct}%"></div></div>
+        </div>`;
+    }
+
+    const resultHtml = hud.resultMessage
+      ? `<div class="case-result">${hud.resultMessage}</div>`
+      : '';
+
+    panel.innerHTML = `
+      <div class="case-title">${c.title}</div>
+      <div class="case-timer">⏱ ${mins}:${secs}</div>
+      <ul class="case-objectives">${objectives}</ul>
+      ${arrestHtml}
+      ${resultHtml}
+    `;
+
+    const thiefObj = this.root.querySelector('#speed-p2');
+    if (thiefObj && !hud.resultMessage) {
+      thiefObj.textContent = hud.thiefObjective;
     }
   }
 

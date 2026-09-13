@@ -1,0 +1,26 @@
+import type { CaseSnapshot } from '@/cases/CaseDefinition';
+import type { ArrestState } from '@/systems/ArrestSystem';
+import type { Character } from '@/characters/Character';
+
+export interface GameModeContext {
+  police: Character;
+  thief: Character;
+  policeHoldingInteract: boolean;
+  dt: number;
+}
+
+export interface GameModeHud {
+  caseSnapshot: CaseSnapshot | null;
+  arrestState: ArrestState | null;
+  thiefObjective: string;
+  resultMessage?: string;
+}
+
+export interface GameMode {
+  readonly id: string;
+  readonly name: string;
+  start(): void;
+  update(ctx: GameModeContext): GameModeHud;
+  isFinished(): boolean;
+  dispose(): void;
+}

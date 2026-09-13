@@ -7,6 +7,8 @@ export class SplitScreenUI {
   private leftHud?: HTMLElement;
   private rightHud?: HTMLElement;
   private gamepadStatus?: HTMLElement;
+  private restartHandler?: () => void;
+  private matchResultFrozen = false;
 
   constructor(uiRoot: HTMLElement) {
     this.root = uiRoot;
@@ -26,7 +28,7 @@ export class SplitScreenUI {
               <li>WASD — Hareket</li>
               <li>Shift — Koş</li>
               <li>Space — Aksiyon</li>
-              <li>E — Tutukla (yakın mesafe, basılı tut)</li>
+              <li>E veya Space — Tutukla (yakın mesafe, basılı tut)</li>
             </ul>
             <h3 style="margin-top: 1rem">Oyuncu 2 — Hırsız (Gamepad)</h3>
             <ul>
@@ -69,6 +71,7 @@ export class SplitScreenUI {
   }
 
   showGameHud(players: { id: number; role: 'police' | 'thief'; label: string }[]): void {
+    this.matchResultFrozen = false;
     this.root.innerHTML = `
       <div class="split-divider"></div>
       <div class="split-hud split-hud-left">
@@ -94,9 +97,22 @@ export class SplitScreenUI {
         <div class="hud-stats" id="stats-p${p.id}">
           <div>${p.label}</div>
           <div id="speed-p${p.id}">Hız: 0</div>
+          <div class="hud-hint" id="hint-p${p.id}"></div>
         </div>
       `;
     });
+
+    const panel = this.root.querySelector('#case-panel');
+    panel?.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (target.id === 'btn-restart') {
+        this.restartHandler?.();
+      }
+    });
+  }
+
+  setRestartHandler(handler: () => void): void {
+    this.restartHandler = handler;
   }
 
   updateHud(
@@ -122,6 +138,14 @@ export class SplitScreenUI {
     const panel = this.root.querySelector('#case-panel') as HTMLElement | null;
     if (!panel || !hud.caseSnapshot) return;
 
+    if (hud.showRestart) {
+      this.matchResultFrozen = true;
+    }
+    if (this.matchResultFrozen && panel.querySelector('#btn-restart')) {
+      this.updateHudHints(hud);
+      return;
+    }
+
     const c = hud.caseSnapshot;
     const mins = Math.floor(c.timeRemainingSeconds / 60);
     const secs = Math.floor(c.timeRemainingSeconds % 60).toString().padStart(2, '0');
@@ -138,7 +162,7 @@ export class SplitScreenUI {
       const pct = Math.round(hud.arrestState.progress * 100);
       arrestHtml = `
         <div class="arrest-bar-wrap">
-          <div class="arrest-label">Tutuklama ${pct}% — E basılı tut</div>
+          <div class="arrest-label">Tutuklama ${pct}% — E veya Space basılı tut</div>
           <div class="arrest-bar"><div class="arrest-fill" style="width:${pct}%"></div></div>
         </div>`;
     }
@@ -147,18 +171,42 @@ export class SplitScreenUI {
       ? `<div class="case-result">${hud.resultMessage}</div>`
       : '';
 
+    const restartHtml = hud.showRestart
+      ? `<button class="menu-btn menu-btn-primary match-restart-btn" id="btn-restart">Tekrar Oyna</button>`
+      : '';
+
     panel.innerHTML = `
       <div class="case-title">${c.title}</div>
       <div class="case-timer">⏱ ${mins}:${secs}</div>
       <ul class="case-objectives">${objectives}</ul>
       ${arrestHtml}
       ${resultHtml}
+      ${restartHtml}
     `;
 
-    const thiefObj = this.root.querySelector('#speed-p2');
-    if (thiefObj && !hud.resultMessage) {
-      thiefObj.textContent = hud.thiefObjective;
+    if (hud.showRestart) {
+      panel.classList.add('case-panel-interactive');
+    } else {
+      panel.classList.remove('case-panel-interactive');
     }
+
+    this.updateHudHints(hud);
+  }
+
+  private updateHudHints(hud: GameModeHud): void {
+    const policeHint = this.root.querySelector('#hint-p1');
+    if (policeHint && hud.policeHint) {
+      policeHint.textContent = hud.policeHint;
+    }
+
+    const thiefHint = this.root.querySelector('#hint-p2');
+    if (thiefHint && hud.thiefHint) {
+      thiefHint.textContent = hud.thiefHint;
+    }
+  }
+
+  bindRestart(onRestart: () => void): void {
+    this.setRestartHandler(onRestart);
   }
 
   showDebug(info: string): void {

@@ -51,7 +51,7 @@ export const POLICE_VS_THIEF_CASE: CaseDefinition = {
   objectives: [
     { id: 'locate', description: 'Hırsızı bul ve takip et' },
     { id: 'approach', description: 'Yakın mesafeye gir (15m)' },
-    { id: 'arrest', description: 'E tuşu ile tutuklamayı tamamla' },
+    { id: 'arrest', description: 'E veya Space ile tutuklamayı tamamla' },
   ],
   timeLimitSeconds: 180,
   crimePoiId: 'plaza',

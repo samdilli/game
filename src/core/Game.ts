@@ -50,6 +50,8 @@ export class Game {
   private debugEnabled: boolean;
   private ready = false;
   private assetSourceLabel = '';
+  private matchEnded = false;
+  private restartBound = false;
 
   private boundResize = (): void => this.babylon?.resize();
   private boundGamepadConnected = (e: GamepadEvent): void => {
@@ -113,7 +115,7 @@ export class Game {
     this.assetSourceLabel =
       assets.source === 'quaternius'
         ? 'Quaternius karakterler aktif'
-        : 'Dev modu: CesiumMan kullanılıyor — Quaternius için public/assets/README.md';
+        : 'Dev modu: capsule modeller — Quaternius GLB için public/assets/README.md';
 
     this.transitionTo(GameState.Menu);
     this.ui!.showMenu(() => void this.startGame(), this.assetSourceLabel);
@@ -140,6 +142,8 @@ export class Game {
   private async startGame(): Promise<void> {
     if (!this.ready || this.state === GameState.Playing) return;
 
+    this.matchEnded = false;
+    this.restartBound = false;
     this.ui?.showLoading('Karakterler, animasyonlar ve şehir NPC\'leri yükleniyor…');
 
     try {
@@ -169,6 +173,7 @@ export class Game {
           label: s.player.inputLabel,
         })),
       );
+      this.ui?.setRestartHandler(() => void this.restartMatch());
 
       this.gameMode = new PoliceVsThiefMode(this.eventBus);
       this.gameMode.start();
@@ -269,12 +274,15 @@ export class Game {
 
     this.inputManager?.update();
 
-    for (const controller of this.controllers) {
-      controller.update(dt);
+    if (!this.matchEnded) {
+      for (const controller of this.controllers) {
+        controller.update(dt);
+      }
     }
 
     this.cameraManager?.updateCameras(
       this.controllers.map((c) => c.getCharacter().mesh),
+      dt,
     );
 
     for (const session of this.sessions) {
@@ -288,13 +296,19 @@ export class Game {
     const thiefSession = this.sessions.find((s) => s.player.role === 'thief');
     if (this.gameMode && policeSession && thiefSession) {
       const policeInput = policeSession.inputDevice.getState();
+      const holdingArrest = policeInput.interact || policeInput.action;
       const hud = this.gameMode.update({
         police: policeSession.character,
         thief: thiefSession.character,
-        policeHoldingInteract: policeInput.interact,
+        policeHoldingInteract: holdingArrest,
         dt,
       });
       this.ui?.updateCaseHud(hud);
+
+      if (hud.showRestart && !this.restartBound) {
+        this.matchEnded = true;
+        this.restartBound = true;
+      }
     }
 
     if (this.babylon) {
@@ -314,6 +328,17 @@ export class Game {
 
   private transitionTo(state: GameState): void {
     this.state = state;
+  }
+
+  private async restartMatch(): Promise<void> {
+    this.gameLoop?.stop();
+    this.npcManager?.dispose();
+    this.npcManager = undefined;
+    this.navigationManager?.clear();
+    this.navigationManager = undefined;
+    this.disposePlayers();
+    this.transitionTo(GameState.Menu);
+    await this.startGame();
   }
 
   private disposePlayers(): void {

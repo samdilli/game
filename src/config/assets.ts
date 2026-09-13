@@ -7,8 +7,6 @@ export const ASSET_PATHS = {
   quaterniusBaseCharacter: '/assets/characters/quaternius/Regular_Male.glb',
   /** Universal Animation Library 2 [Standard, no root motion] */
   quaterniusAnimationLibrary: '/assets/animations/quaternius/UAL2_Standard.glb',
-  /** Dev fallback when Quaternius files are not present yet */
-  devFallbackCharacter: '/assets/characters/dev/CesiumMan.glb',
 } as const;
 
 export const CHARACTER_SPAWN = {
@@ -17,9 +15,12 @@ export const CHARACTER_SPAWN = {
   thiefTint: { r: 1.0, g: 0.45, b: 0.4 },
 } as const;
 
+export type AssetVisualMode = 'glb' | 'primitive';
+
 export interface ResolvedCharacterAssets {
-  modelUrl: string;
   source: 'quaternius' | 'dev-fallback';
+  visual: AssetVisualMode;
+  modelUrl?: string;
   animationLibraryUrl?: string;
 }
 
@@ -44,20 +45,24 @@ export async function isValidGlbUrl(url: string): Promise<boolean> {
   }
 }
 
-/** Pick best available character GLB at runtime. */
+/**
+ * Quaternius GLB varsa onu kullan.
+ * Yoksa primitive capsule (CesiumMan GLB dev modda kullanılmaz — ölçek/iskel et sorunlu).
+ */
 export async function resolveCharacterAssets(): Promise<ResolvedCharacterAssets> {
   const hasQuaternius = await isValidGlbUrl(ASSET_PATHS.quaterniusBaseCharacter);
   if (hasQuaternius) {
     const hasAnimLib = await isValidGlbUrl(ASSET_PATHS.quaterniusAnimationLibrary);
     return {
-      modelUrl: ASSET_PATHS.quaterniusBaseCharacter,
       source: 'quaternius',
+      visual: 'glb',
+      modelUrl: ASSET_PATHS.quaterniusBaseCharacter,
       animationLibraryUrl: hasAnimLib ? ASSET_PATHS.quaterniusAnimationLibrary : undefined,
     };
   }
 
   return {
-    modelUrl: ASSET_PATHS.devFallbackCharacter,
     source: 'dev-fallback',
+    visual: 'primitive',
   };
 }

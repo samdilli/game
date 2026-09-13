@@ -6,6 +6,13 @@ import type { CharacterRole } from '@/world/CityData';
 import { Character } from '@/characters/Character';
 import { CharacterMovement } from '@/characters/Character';
 import { CharacterAnimationController } from '@/characters/CharacterAnimationController';
+import {
+  getSkinnedMesh,
+  normalizeCharacterScale,
+  placeCharacterOnGround,
+  setCharacterXZ,
+} from '@/characters/CharacterMeshUtils';
+import { createCapsuleCharacter } from '@/characters/PrimitiveCharacter';
 import { CharacterPhysicsBody } from '@/physics/CharacterPhysicsBody';
 import { engineConfig } from '@/config/engine-config';
 
@@ -24,11 +31,67 @@ export interface SpawnCharacterOptions {
 export class CharacterFactory {
   constructor(private readonly assetManager: AssetManager) {}
 
-  async spawn(
+  spawnNpc(
     scene: Scene,
     assets: ResolvedCharacterAssets,
     options: SpawnCharacterOptions,
   ): Promise<Character> {
+    return this.spawn(scene, assets, options, { enablePhysics: false });
+  }
+
+  async spawn(
+    scene: Scene,
+    assets: ResolvedCharacterAssets,
+    options: SpawnCharacterOptions,
+    spawnOptions: { enablePhysics?: boolean } = {},
+  ): Promise<Character> {
+    const enablePhysics = spawnOptions.enablePhysics ?? true;
+    if (assets.visual === 'primitive') {
+      return this.spawnPrimitive(scene, options, enablePhysics);
+    }
+    return this.spawnGlb(scene, assets, options, enablePhysics);
+  }
+
+  private spawnPrimitive(
+    scene: Scene,
+    options: SpawnCharacterOptions,
+    enablePhysics: boolean,
+  ): Character {
+    const tint = new Color3(options.tint.r, options.tint.g, options.tint.b);
+    const mesh = createCapsuleCharacter(scene, options.instanceName, tint, options.position);
+
+    const movement = new CharacterMovement({
+      moveSpeed: options.moveSpeed,
+      sprintMultiplier: options.sprintMultiplier,
+      worldHalfSize: options.worldHalfSize,
+    });
+
+    let physics: CharacterPhysicsBody | undefined;
+    if (engineConfig.features.physics && enablePhysics) {
+      physics = new CharacterPhysicsBody(mesh, scene);
+    }
+
+    return new Character({
+      id: options.id,
+      name: options.name,
+      role: options.role,
+      scene,
+      mesh,
+      movement,
+      physics,
+    });
+  }
+
+  private async spawnGlb(
+    scene: Scene,
+    assets: ResolvedCharacterAssets,
+    options: SpawnCharacterOptions,
+    enablePhysics: boolean,
+  ): Promise<Character> {
+    if (!assets.modelUrl) {
+      throw new Error('GLB modelUrl eksik');
+    }
+
     const instance = await this.assetManager.instantiateCharacter(
       assets.modelUrl,
       scene,
@@ -47,9 +110,11 @@ export class CharacterFactory {
       animationGroups = [...animationGroups, ...merged];
     }
 
-    normalizeCharacterScale(instance.rootMesh, CHARACTER_SPAWN.targetHeight);
-    applyTint(instance.rootMesh, new Color3(options.tint.r, options.tint.g, options.tint.b));
-    instance.rootMesh.position.copyFrom(options.position);
+    const root = instance.rootMesh;
+    normalizeCharacterScale(root, CHARACTER_SPAWN.targetHeight);
+    setCharacterXZ(root, options.position.x, options.position.z);
+    placeCharacterOnGround(root, 0);
+    applyTint(getSkinnedMesh(root), new Color3(options.tint.r, options.tint.g, options.tint.b));
 
     const movement = new CharacterMovement({
       moveSpeed: options.moveSpeed,
@@ -63,8 +128,8 @@ export class CharacterFactory {
     });
 
     let physics: CharacterPhysicsBody | undefined;
-    if (engineConfig.features.physics) {
-      physics = new CharacterPhysicsBody(instance.rootMesh, scene);
+    if (engineConfig.features.physics && enablePhysics) {
+      physics = new CharacterPhysicsBody(root, scene);
     }
 
     return new Character({
@@ -72,38 +137,18 @@ export class CharacterFactory {
       name: options.name,
       role: options.role,
       scene,
-      mesh: instance.rootMesh,
+      mesh: root,
       movement,
       animation,
       physics,
     });
   }
-
-  spawnNpc(
-    scene: Scene,
-    assets: ResolvedCharacterAssets,
-    options: SpawnCharacterOptions,
-  ): Promise<Character> {
-    return this.spawn(scene, assets, options);
-  }
-}
-
-function normalizeCharacterScale(mesh: AbstractMesh, targetHeight: number): void {
-  mesh.refreshBoundingInfo(true, true);
-  const bounds = mesh.getBoundingInfo();
-  const extend = bounds.boundingBox.extendSizeWorld;
-  const height = Math.max(extend.y * 2, 0.01);
-  const scale = targetHeight / height;
-  mesh.scaling.setAll(scale);
-  mesh.refreshBoundingInfo(true, true);
-
-  const minY = mesh.getBoundingInfo().boundingBox.minimumWorld.y;
-  mesh.position.y -= minY;
 }
 
 function applyTint(root: AbstractMesh, tint: Color3): void {
   const meshes = [root, ...root.getChildMeshes(false)];
   for (const mesh of meshes) {
+    if (!mesh.getTotalVertices()) continue;
     if (!mesh.material) {
       const mat = new StandardMaterial(`${mesh.name}_mat`, root.getScene());
       mat.diffuseColor = tint;

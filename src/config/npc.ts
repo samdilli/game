@@ -48,8 +48,9 @@ export const THIEF_NPC_ARCHETYPE: NPCArchetypeConfig = {
 };
 
 export const NPC_SPAWN_CONFIG = {
-  civilianCount: 6,
-  includeThiefNpc: true,
+  civilianCount: 3,
+  /** PvP modunda ikinci hırsız NPC gereksiz — sadece siviller. */
+  includeThiefNpc: false,
   lod0Distance: 24,
   lod1Distance: 44,
   lod0TickSeconds: 0.15,

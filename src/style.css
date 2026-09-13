@@ -271,6 +271,21 @@ body,
   z-index: 15;
 }
 
+.case-panel-interactive {
+  pointer-events: auto;
+}
+
+.hud-hint {
+  margin-top: 0.35rem;
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.match-restart-btn {
+  margin-top: 0.75rem;
+  pointer-events: auto;
+}
+
 .case-title {
   font-weight: 700;
   font-size: 0.9rem;

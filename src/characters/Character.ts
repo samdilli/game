@@ -17,6 +17,9 @@ export class CharacterMovement {
   isSprinting = false;
   currentSpeed = 0;
 
+  private smoothedMoveX = 0;
+  private smoothedMoveZ = 0;
+
   constructor(private config: CharacterMovementConfig) {}
 
   setSpeeds(moveSpeed: number, sprintMultiplier: number): void {
@@ -29,8 +32,15 @@ export class CharacterMovement {
       ? this.config.moveSpeed * this.config.sprintMultiplier
       : this.config.moveSpeed;
 
-    const moveX = input.moveX;
-    const moveZ = input.moveY;
+    const targetX = input.moveX;
+    const targetZ = input.moveY;
+    const accel = 14;
+    const blend = 1 - Math.exp(-accel * dt);
+    this.smoothedMoveX += (targetX - this.smoothedMoveX) * blend;
+    this.smoothedMoveZ += (targetZ - this.smoothedMoveZ) * blend;
+
+    const moveX = Math.abs(this.smoothedMoveX) < 0.02 ? 0 : this.smoothedMoveX;
+    const moveZ = Math.abs(this.smoothedMoveZ) < 0.02 ? 0 : this.smoothedMoveZ;
 
     this.isMoving = Math.abs(moveX) > 0.01 || Math.abs(moveZ) > 0.01;
     this.isSprinting = input.sprint && this.isMoving;

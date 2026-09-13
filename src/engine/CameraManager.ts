@@ -9,6 +9,8 @@ import {
   type AbstractMesh,
 } from '@babylonjs/core';
 import type { SplitLayout } from '@/config/game';
+import { getCharacterFocusPoint } from '@/characters/CharacterMeshUtils';
+import { getCapsuleFocusPoint } from '@/characters/PrimitiveCharacter';
 
 export interface PlayerCameraConfig {
   playerId: number;
@@ -18,38 +20,54 @@ export interface PlayerCameraConfig {
   viewportCount: number;
 }
 
+function focusPoint(target: AbstractMesh): Vector3 {
+  if (target.metadata?.isCharacter) {
+    return getCapsuleFocusPoint(target);
+  }
+  return getCharacterFocusPoint(target);
+}
+
 export class CameraManager {
   private cameras: ArcRotateCamera[] = [];
+  private focusPoints: Vector3[] = [];
 
   createPlayerCamera(scene: Scene, config: PlayerCameraConfig): ArcRotateCamera {
     const cam = new ArcRotateCamera(
       `camera_p${config.playerId}`,
       -Math.PI / 2,
-      Math.PI / 3.2,
-      14,
-      config.target.position.clone(),
+      Math.PI / 2.75,
+      9,
+      focusPoint(config.target),
       scene,
     );
-    cam.lowerRadiusLimit = 8;
-    cam.upperRadiusLimit = 22;
-    cam.lowerBetaLimit = 0.4;
-    cam.upperBetaLimit = Math.PI / 2.2;
-    cam.inertia = 0.08;
+    cam.lowerRadiusLimit = 4.5;
+    cam.upperRadiusLimit = 16;
+    cam.lowerBetaLimit = 0.35;
+    cam.upperBetaLimit = Math.PI / 2.15;
+    cam.inertia = 0.12;
     cam.angularSensibilityX = 4000;
     cam.angularSensibilityY = 4000;
     cam.attachControl(false);
 
     this.applyViewport(cam, config.splitLayout, config.viewportIndex, config.viewportCount);
     this.cameras.push(cam);
+    this.focusPoints.push(focusPoint(config.target).clone());
     return cam;
   }
 
-  updateCameras(targets: AbstractMesh[]): void {
+  updateCameras(targets: AbstractMesh[], dt = 0.016): void {
+    const lerpFactor = 1 - Math.exp(-10 * dt);
     for (let i = 0; i < this.cameras.length; i++) {
       const cam = this.cameras[i];
       const target = targets[i];
       if (!target) continue;
-      cam.setTarget(target.position.clone());
+      const desired = focusPoint(target);
+      const current = this.focusPoints[i] ?? desired.clone();
+      current.x += (desired.x - current.x) * lerpFactor;
+      current.y += (desired.y - current.y) * lerpFactor;
+      current.z += (desired.z - current.z) * lerpFactor;
+      this.focusPoints[i] = current;
+      cam.setTarget(current);
     }
   }
 
@@ -85,6 +103,7 @@ export class CameraManager {
       cam.dispose();
     }
     this.cameras = [];
+    this.focusPoints = [];
   }
 }
 

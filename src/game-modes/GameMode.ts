@@ -1,12 +1,14 @@
 import type { CaseSnapshot } from '@/cases/CaseDefinition';
 import type { ArrestState } from '@/systems/ArrestSystem';
 import type { Character } from '@/characters/Character';
+import type { WorldEnvironmentState } from '@/world/WorldEnvironment';
 
 export interface GameModeContext {
   police: Character;
   thief: Character;
   policeHoldingInteract: boolean;
   dt: number;
+  environment?: WorldEnvironmentState;
 }
 
 export interface GameModeHud {
@@ -19,6 +21,7 @@ export interface GameModeHud {
   thiefCompass?: string;
   briefing?: string;
   escalationActive?: boolean;
+  environmentLabel?: string;
   resultMessage?: string;
   showRestart?: boolean;
 }

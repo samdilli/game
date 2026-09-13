@@ -26,6 +26,17 @@ Tutuklama + polis vs hırsız modu mevcut GLB + `E` etkileşimi ile çalışır.
 
 ---
 
+## Milestone 6 (Mevcut)
+
+| Asset | Kaynak | Hedef path |
+|-------|--------|------------|
+| Modular City bina GLB | [Quaternius packs](https://quaternius.itch.io/) | `public/assets/world/quaternius/Building_Small.glb` |
+| Büyük bina (opsiyonel) | aynı | `public/assets/world/quaternius/Building_Large.glb` |
+
+Yoksa prosedürel kutular kullanılır. GLB eklenince şehir otomatik zenginleşir.
+
+---
+
 ## Milestone 5–6 (procedural vaka + yaşayan şehir)
 
 | Asset | Ne zaman | Path önerisi |

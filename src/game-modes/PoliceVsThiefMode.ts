@@ -5,6 +5,7 @@ import type { CaseDefinition } from '@/cases/CaseDefinition';
 import { ArrestSystem, isAtPoi } from '@/systems/ArrestSystem';
 import { poiById } from '@/world/CityData';
 import { bearingDegrees, compassArrow } from '@/world/ObjectiveMarkers';
+import { WEATHER_LABELS } from '@/config/world-environment';
 import type { GameMode, GameModeContext, GameModeHud } from '@/game-modes/GameMode';
 
 const INVESTIGATE_RADIUS = 8;
@@ -111,6 +112,11 @@ export class PoliceVsThiefMode implements GameMode {
       ? compassArrow(bearingDegrees(ctx.thief.mesh.position, hideout))
       : '↑';
 
+    const env = ctx.environment;
+    const environmentLabel = env
+      ? `${env.timeLabel} · ${env.phaseLabel} · ${WEATHER_LABELS[env.weather]}`
+      : undefined;
+
     return {
       caseSnapshot: snapshot,
       arrestState,
@@ -121,6 +127,7 @@ export class PoliceVsThiefMode implements GameMode {
       thiefCompass,
       briefing: caseDef?.briefing,
       escalationActive: escalation,
+      environmentLabel,
       resultMessage: this.resultMessage,
       showRestart: finished,
     };

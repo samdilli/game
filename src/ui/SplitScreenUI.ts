@@ -178,6 +178,7 @@ export class SplitScreenUI {
 
     panel.innerHTML = `
       <div class="case-title">${c.title}</div>
+      ${hud.environmentLabel && !hud.showRestart ? `<div class="case-env">${hud.environmentLabel}</div>` : ''}
       ${hud.briefing && !hud.showRestart ? `<div class="case-briefing">${hud.briefing}</div>` : ''}
       <div class="case-timer ${hud.escalationActive ? 'case-timer-urgent' : ''}">⏱ ${mins}:${secs}${hud.escalationActive ? ' · ACİL' : ''}</div>
       <ul class="case-objectives">${objectives}</ul>

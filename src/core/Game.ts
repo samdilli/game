@@ -28,6 +28,9 @@ import { poiById } from '@/world/CityData';
 import { ObjectiveMarkers } from '@/world/ObjectiveMarkers';
 import { PoliceVsThiefMode } from '@/game-modes/PoliceVsThiefMode';
 import type { GameMode } from '@/game-modes/GameMode';
+import { WorldEnvironment } from '@/world/WorldEnvironment';
+import { startHourFromSeed, weatherFromSeed } from '@/config/world-environment';
+import { AudioManager } from '@/audio/AudioManager';
 
 export class Game {
   private config: GameConfig;
@@ -46,6 +49,8 @@ export class Game {
   private npcManager?: NPCManager;
   private gameMode?: GameMode;
   private objectiveMarkers?: ObjectiveMarkers;
+  private worldEnvironment?: WorldEnvironment;
+  private audioManager?: AudioManager;
   private devTools?: DevTools;
   private gameLoop?: GameLoop;
   private ui?: SplitScreenUI;
@@ -99,6 +104,7 @@ export class Game {
     this.sceneManager = new SceneManager(this.babylon.engine, {
       worldSize: this.config.worldSize,
     });
+    await this.sceneManager.enhanceCity(this.assetManager);
 
     if (engineConfig.features.physics) {
       await this.physicsManager.initialize(this.sceneManager.scene);
@@ -108,6 +114,7 @@ export class Game {
     await this.devTools.bindInspector(this.sceneManager.scene);
 
     this.cameraManager = new CameraManager();
+    this.audioManager = new AudioManager(this.eventBus);
     this.services.register('assetManager', this.assetManager);
     this.services.register('physicsManager', this.physicsManager);
 
@@ -124,7 +131,10 @@ export class Game {
         : 'Dev modu: capsule modeller — Quaternius GLB için public/assets/README.md';
 
     this.transitionTo(GameState.Menu);
-    this.ui!.showMenu(() => void this.startGame(), this.assetSourceLabel);
+    this.ui!.showMenu(() => {
+      this.audioManager?.unlock();
+      void this.startGame();
+    }, this.assetSourceLabel);
     this.ready = true;
   }
 
@@ -150,12 +160,22 @@ export class Game {
 
     this.matchEnded = false;
     this.restartBound = false;
+    this.audioManager?.resetMatch();
     this.ui?.showLoading('Karakterler, animasyonlar ve şehir NPC\'leri yükleniyor…');
 
     try {
       const assets = await resolveCharacterAssets();
       const caseDef = generatePoliceVsThiefCase();
       await this.buildPlayers(assets, caseDef);
+
+      const envSeed = caseDef.seed ?? Date.now();
+      this.worldEnvironment?.dispose();
+      this.worldEnvironment = new WorldEnvironment(
+        this.sceneManager!.scene,
+        this.sceneManager!.lighting,
+        weatherFromSeed(envSeed),
+        startHourFromSeed(envSeed),
+      );
 
       this.navigationManager = new NavigationManager(this.sceneManager!.city);
       this.npcManager = new NPCManager(
@@ -209,7 +229,10 @@ export class Game {
       console.error(error);
       this.ui?.showError(
         `Oyun başlatılamadı: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
-        () => this.ui?.showMenu(() => void this.startGame(), this.assetSourceLabel),
+        () => this.ui?.showMenu(() => {
+          this.audioManager?.unlock();
+          void this.startGame();
+        }, this.assetSourceLabel),
       );
     }
   }
@@ -300,6 +323,7 @@ export class Game {
       const shown = Math.ceil(this.countdownRemaining);
       if (shown > 0) {
         this.ui?.updateCountdown(shown);
+        this.audioManager?.updateCountdown(shown);
       } else {
         this.ui?.hideCountdown();
       }
@@ -321,6 +345,8 @@ export class Game {
     const playerChars = this.sessions.map((s) => s.character);
     this.npcManager?.update(dt, playerChars);
 
+    const envState = this.worldEnvironment?.update(dt);
+
     const policeSession = this.sessions.find((s) => s.player.role === 'police');
     const thiefSession = this.sessions.find((s) => s.player.role === 'thief');
     if (this.gameMode && policeSession && thiefSession && this.countdownRemaining <= 0) {
@@ -331,8 +357,17 @@ export class Game {
         thief: thiefSession.character,
         policeHoldingInteract: holdingArrest,
         dt,
+        environment: envState,
       });
       this.ui?.updateCaseHud(hud);
+
+      if (!this.matchEnded) {
+        const dist = Math.hypot(
+          policeSession.character.mesh.position.x - thiefSession.character.mesh.position.x,
+          policeSession.character.mesh.position.z - thiefSession.character.mesh.position.z,
+        );
+        this.audioManager?.setChaseTension(Math.max(0, 1 - dist / 28));
+      }
 
       if (hud.showRestart && !this.restartBound) {
         this.matchEnded = true;
@@ -345,8 +380,10 @@ export class Game {
     }
 
     if (this.debugEnabled) {
+      const kit = this.sceneManager?.getCityKitCount() ?? 0;
+      const env = envState ? `${envState.timeLabel} ${envState.phaseLabel}` : '';
       this.ui?.showDebug(
-        `FPS: ${this.babylon?.getFps()} | ${this.babylon?.backend} | NPC: ${this.npcManager?.getActiveCount() ?? 0} | ${this.assetSourceLabel}`,
+        `FPS: ${this.babylon?.getFps()} | ${this.babylon?.backend} | NPC: ${this.npcManager?.getActiveCount() ?? 0} | Kit: ${kit} | ${env} | ${this.assetSourceLabel}`,
       );
     }
   }
@@ -361,6 +398,9 @@ export class Game {
 
   private async restartMatch(): Promise<void> {
     this.gameLoop?.stop();
+    this.worldEnvironment?.dispose();
+    this.worldEnvironment = undefined;
+    this.audioManager?.resetMatch();
     this.objectiveMarkers?.dispose();
     this.objectiveMarkers = undefined;
     this.npcManager?.dispose();
@@ -399,6 +439,7 @@ export class Game {
     this.babylon?.dispose();
     this.devTools?.dispose();
     this.assetManager?.clear();
+    this.audioManager?.dispose();
     this.ui?.clear();
     this.eventBus.clear();
   }

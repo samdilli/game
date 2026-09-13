@@ -9,9 +9,9 @@ export interface ArrestConfig {
 }
 
 export const DEFAULT_ARREST_CONFIG: ArrestConfig = {
-  range: 2.8,
-  durationSeconds: 2.2,
-  maxTargetSpeed: 4.5,
+  range: 3.2,
+  durationSeconds: 2,
+  maxTargetSpeed: 5,
 };
 
 export interface ArrestState {

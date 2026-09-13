@@ -13,7 +13,10 @@ export interface GameModeHud {
   caseSnapshot: CaseSnapshot | null;
   arrestState: ArrestState | null;
   thiefObjective: string;
+  policeHint?: string;
+  thiefHint?: string;
   resultMessage?: string;
+  showRestart?: boolean;
 }
 
 export interface GameMode {

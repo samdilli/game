@@ -44,6 +44,11 @@ export class PoliceVsThiefMode implements GameMode {
     });
 
     const snapshot = this.caseManager.getSnapshot();
+    const distToThief = distanceXZ(ctx.police.mesh.position, ctx.thief.mesh.position);
+    const distToHideout = hideout
+      ? distanceXZ(ctx.thief.mesh.position, hideout)
+      : 0;
+
     if (snapshot?.status === 'completed') {
       this.resultMessage = 'Polis kazandı — hırsız tutuklandı!';
     } else if (snapshot?.status === 'failed') {
@@ -52,11 +57,29 @@ export class PoliceVsThiefMode implements GameMode {
         : 'Süre doldu — hırsız kaçtı!';
     }
 
+    const finished = snapshot?.status === 'completed' || snapshot?.status === 'failed';
+
+    let policeHint = `Hırsıza mesafe: ${Math.round(distToThief)}m`;
+    if (arrestState.inRange) {
+      policeHint = arrestState.progressing
+        ? 'Tutuklama devam ediyor — E veya Space basılı tut'
+        : 'Yakındasın! E veya Space ile tutukla';
+    } else if (distToThief > 25) {
+      policeHint = 'Hırsızı ara — güneydoğuya bak';
+    }
+
+    let thiefHint = hideout
+      ? `Saklanma noktası: ${Math.round(distToHideout)}m (güneydoğu)`
+      : 'Saklanma noktasına ulaş';
+
     return {
       caseSnapshot: snapshot,
       arrestState,
       thiefObjective: 'Saklanma noktasına ulaş (harita güneydoğu)',
+      policeHint,
+      thiefHint,
       resultMessage: this.resultMessage,
+      showRestart: finished,
     };
   }
 
@@ -69,4 +92,8 @@ export class PoliceVsThiefMode implements GameMode {
     this.caseManager.dispose();
     this.arrestSystem.reset();
   }
+}
+
+function distanceXZ(a: { x: number; z: number }, b: { x: number; z: number }): number {
+  return Math.hypot(a.x - b.x, a.z - b.z);
 }

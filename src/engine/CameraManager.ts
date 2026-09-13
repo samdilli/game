@@ -29,36 +29,45 @@ function focusPoint(target: AbstractMesh): Vector3 {
 
 export class CameraManager {
   private cameras: ArcRotateCamera[] = [];
+  private focusPoints: Vector3[] = [];
 
   createPlayerCamera(scene: Scene, config: PlayerCameraConfig): ArcRotateCamera {
     const cam = new ArcRotateCamera(
       `camera_p${config.playerId}`,
       -Math.PI / 2,
-      Math.PI / 2.8,
-      10,
+      Math.PI / 2.75,
+      9,
       focusPoint(config.target),
       scene,
     );
-    cam.lowerRadiusLimit = 5;
-    cam.upperRadiusLimit = 18;
-    cam.lowerBetaLimit = 0.4;
-    cam.upperBetaLimit = Math.PI / 2.2;
-    cam.inertia = 0.08;
+    cam.lowerRadiusLimit = 4.5;
+    cam.upperRadiusLimit = 16;
+    cam.lowerBetaLimit = 0.35;
+    cam.upperBetaLimit = Math.PI / 2.15;
+    cam.inertia = 0.12;
     cam.angularSensibilityX = 4000;
     cam.angularSensibilityY = 4000;
     cam.attachControl(false);
 
     this.applyViewport(cam, config.splitLayout, config.viewportIndex, config.viewportCount);
     this.cameras.push(cam);
+    this.focusPoints.push(focusPoint(config.target).clone());
     return cam;
   }
 
-  updateCameras(targets: AbstractMesh[]): void {
+  updateCameras(targets: AbstractMesh[], dt = 0.016): void {
+    const lerpFactor = 1 - Math.exp(-10 * dt);
     for (let i = 0; i < this.cameras.length; i++) {
       const cam = this.cameras[i];
       const target = targets[i];
       if (!target) continue;
-      cam.setTarget(focusPoint(target));
+      const desired = focusPoint(target);
+      const current = this.focusPoints[i] ?? desired.clone();
+      current.x += (desired.x - current.x) * lerpFactor;
+      current.y += (desired.y - current.y) * lerpFactor;
+      current.z += (desired.z - current.z) * lerpFactor;
+      this.focusPoints[i] = current;
+      cam.setTarget(current);
     }
   }
 
@@ -94,6 +103,7 @@ export class CameraManager {
       cam.dispose();
     }
     this.cameras = [];
+    this.focusPoints = [];
   }
 }
 

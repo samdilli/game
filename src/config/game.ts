@@ -18,7 +18,7 @@ export interface GameConfig {
 export const DEFAULT_GAME_CONFIG: GameConfig = {
   splitLayout: 'horizontal',
   debugMode: import.meta.env.DEV,
-  moveSpeed: 6,
-  sprintMultiplier: 1.75,
+  moveSpeed: 7,
+  sprintMultiplier: 1.85,
   worldSize: 80,
 };

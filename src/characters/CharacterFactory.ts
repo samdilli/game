@@ -31,26 +31,32 @@ export interface SpawnCharacterOptions {
 export class CharacterFactory {
   constructor(private readonly assetManager: AssetManager) {}
 
-  async spawn(
-    scene: Scene,
-    assets: ResolvedCharacterAssets,
-    options: SpawnCharacterOptions,
-  ): Promise<Character> {
-    if (assets.visual === 'primitive') {
-      return this.spawnPrimitive(scene, options);
-    }
-    return this.spawnGlb(scene, assets, options);
-  }
-
   spawnNpc(
     scene: Scene,
     assets: ResolvedCharacterAssets,
     options: SpawnCharacterOptions,
   ): Promise<Character> {
-    return this.spawn(scene, assets, options);
+    return this.spawn(scene, assets, options, { enablePhysics: false });
   }
 
-  private spawnPrimitive(scene: Scene, options: SpawnCharacterOptions): Character {
+  async spawn(
+    scene: Scene,
+    assets: ResolvedCharacterAssets,
+    options: SpawnCharacterOptions,
+    spawnOptions: { enablePhysics?: boolean } = {},
+  ): Promise<Character> {
+    const enablePhysics = spawnOptions.enablePhysics ?? true;
+    if (assets.visual === 'primitive') {
+      return this.spawnPrimitive(scene, options, enablePhysics);
+    }
+    return this.spawnGlb(scene, assets, options, enablePhysics);
+  }
+
+  private spawnPrimitive(
+    scene: Scene,
+    options: SpawnCharacterOptions,
+    enablePhysics: boolean,
+  ): Character {
     const tint = new Color3(options.tint.r, options.tint.g, options.tint.b);
     const mesh = createCapsuleCharacter(scene, options.instanceName, tint, options.position);
 
@@ -61,7 +67,7 @@ export class CharacterFactory {
     });
 
     let physics: CharacterPhysicsBody | undefined;
-    if (engineConfig.features.physics) {
+    if (engineConfig.features.physics && enablePhysics) {
       physics = new CharacterPhysicsBody(mesh, scene);
     }
 
@@ -80,6 +86,7 @@ export class CharacterFactory {
     scene: Scene,
     assets: ResolvedCharacterAssets,
     options: SpawnCharacterOptions,
+    enablePhysics: boolean,
   ): Promise<Character> {
     if (!assets.modelUrl) {
       throw new Error('GLB modelUrl eksik');
@@ -121,7 +128,7 @@ export class CharacterFactory {
     });
 
     let physics: CharacterPhysicsBody | undefined;
-    if (engineConfig.features.physics) {
+    if (engineConfig.features.physics && enablePhysics) {
       physics = new CharacterPhysicsBody(root, scene);
     }
 

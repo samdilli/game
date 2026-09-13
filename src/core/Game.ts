@@ -22,6 +22,10 @@ import { GamepadInput } from '@/input/GamepadInput';
 import { SplitScreenUI } from '@/ui/SplitScreenUI';
 import { NavigationManager } from '@/navigation/NavigationManager';
 import { NPCManager } from '@/npc/NPCManager';
+import { generatePoliceVsThiefCase, getCaseSpawnPositions } from '@/cases/CaseGenerator';
+import type { CaseDefinition } from '@/cases/CaseDefinition';
+import { poiById } from '@/world/CityData';
+import { ObjectiveMarkers } from '@/world/ObjectiveMarkers';
 import { PoliceVsThiefMode } from '@/game-modes/PoliceVsThiefMode';
 import type { GameMode } from '@/game-modes/GameMode';
 
@@ -41,6 +45,7 @@ export class Game {
   private navigationManager?: NavigationManager;
   private npcManager?: NPCManager;
   private gameMode?: GameMode;
+  private objectiveMarkers?: ObjectiveMarkers;
   private devTools?: DevTools;
   private gameLoop?: GameLoop;
   private ui?: SplitScreenUI;
@@ -52,6 +57,7 @@ export class Game {
   private assetSourceLabel = '';
   private matchEnded = false;
   private restartBound = false;
+  private countdownRemaining = 0;
 
   private boundResize = (): void => this.babylon?.resize();
   private boundGamepadConnected = (e: GamepadEvent): void => {
@@ -148,7 +154,8 @@ export class Game {
 
     try {
       const assets = await resolveCharacterAssets();
-      await this.buildPlayers(assets);
+      const caseDef = generatePoliceVsThiefCase();
+      await this.buildPlayers(assets, caseDef);
 
       this.navigationManager = new NavigationManager(this.sceneManager!.city);
       this.npcManager = new NPCManager(
@@ -163,6 +170,13 @@ export class Game {
         this.sessions.map((s) => s.character),
       );
 
+      const crime = poiById(caseDef.crimePoiId);
+      const escape = poiById(caseDef.escapePoiId);
+      if (crime && escape) {
+        this.objectiveMarkers = new ObjectiveMarkers();
+        this.objectiveMarkers.build(this.sceneManager!.scene, crime, escape);
+      }
+
       this.transitionTo(GameState.Playing);
       this.eventBus.emit('GameStarted', undefined);
 
@@ -175,8 +189,11 @@ export class Game {
       );
       this.ui?.setRestartHandler(() => void this.restartMatch());
 
-      this.gameMode = new PoliceVsThiefMode(this.eventBus);
+      this.gameMode = new PoliceVsThiefMode(this.eventBus, caseDef);
       this.gameMode.start();
+
+      this.countdownRemaining = 3;
+      this.ui?.showCountdown(3, caseDef.briefing);
 
       if (!this.gameLoop) {
         this.gameLoop = new GameLoop(
@@ -197,18 +214,22 @@ export class Game {
     }
   }
 
-  private async buildPlayers(assets: Awaited<ReturnType<typeof resolveCharacterAssets>>): Promise<void> {
+  private async buildPlayers(
+    assets: Awaited<ReturnType<typeof resolveCharacterAssets>>,
+    caseDef: CaseDefinition,
+  ): Promise<void> {
     this.disposePlayers();
     const scene = this.sceneManager!.scene;
     const half = this.config.worldSize / 2 - 2;
     const factory = this.characterFactory!;
+    const spawn = getCaseSpawnPositions(caseDef);
 
     const char1 = await factory.spawn(scene, assets, {
       id: 1,
       name: 'Polis',
       role: 'police',
       instanceName: 'player1',
-      position: new Vector3(-4, 0, 0),
+      position: new Vector3(spawn.police.x, 0, spawn.police.z),
       moveSpeed: this.config.moveSpeed,
       sprintMultiplier: this.config.sprintMultiplier,
       worldHalfSize: half,
@@ -220,7 +241,7 @@ export class Game {
       name: 'Hırsız',
       role: 'thief',
       instanceName: 'player2',
-      position: new Vector3(4, 0, 0),
+      position: new Vector3(spawn.thief.x, 0, spawn.thief.z),
       moveSpeed: this.config.moveSpeed,
       sprintMultiplier: this.config.sprintMultiplier,
       worldHalfSize: half,
@@ -274,7 +295,15 @@ export class Game {
 
     this.inputManager?.update();
 
-    if (!this.matchEnded) {
+    if (this.countdownRemaining > 0) {
+      this.countdownRemaining = Math.max(0, this.countdownRemaining - dt);
+      const shown = Math.ceil(this.countdownRemaining);
+      if (shown > 0) {
+        this.ui?.updateCountdown(shown);
+      } else {
+        this.ui?.hideCountdown();
+      }
+    } else if (!this.matchEnded) {
       for (const controller of this.controllers) {
         controller.update(dt);
       }
@@ -294,7 +323,7 @@ export class Game {
 
     const policeSession = this.sessions.find((s) => s.player.role === 'police');
     const thiefSession = this.sessions.find((s) => s.player.role === 'thief');
-    if (this.gameMode && policeSession && thiefSession) {
+    if (this.gameMode && policeSession && thiefSession && this.countdownRemaining <= 0) {
       const policeInput = policeSession.inputDevice.getState();
       const holdingArrest = policeInput.interact || policeInput.action;
       const hud = this.gameMode.update({
@@ -332,6 +361,8 @@ export class Game {
 
   private async restartMatch(): Promise<void> {
     this.gameLoop?.stop();
+    this.objectiveMarkers?.dispose();
+    this.objectiveMarkers = undefined;
     this.npcManager?.dispose();
     this.npcManager = undefined;
     this.navigationManager?.clear();
@@ -344,6 +375,8 @@ export class Game {
   private disposePlayers(): void {
     this.gameMode?.dispose();
     this.gameMode = undefined;
+    this.objectiveMarkers?.dispose();
+    this.objectiveMarkers = undefined;
     for (const controller of this.controllers) {
       controller.getCharacter().dispose();
     }

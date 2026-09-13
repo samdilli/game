@@ -97,6 +97,7 @@ export class SplitScreenUI {
         <div class="hud-stats" id="stats-p${p.id}">
           <div>${p.label}</div>
           <div id="speed-p${p.id}">Hız: 0</div>
+          <div class="hud-compass" id="compass-p${p.id}">↑</div>
           <div class="hud-hint" id="hint-p${p.id}"></div>
         </div>
       `;
@@ -177,7 +178,8 @@ export class SplitScreenUI {
 
     panel.innerHTML = `
       <div class="case-title">${c.title}</div>
-      <div class="case-timer">⏱ ${mins}:${secs}</div>
+      ${hud.briefing && !hud.showRestart ? `<div class="case-briefing">${hud.briefing}</div>` : ''}
+      <div class="case-timer ${hud.escalationActive ? 'case-timer-urgent' : ''}">⏱ ${mins}:${secs}${hud.escalationActive ? ' · ACİL' : ''}</div>
       <ul class="case-objectives">${objectives}</ul>
       ${arrestHtml}
       ${resultHtml}
@@ -203,6 +205,38 @@ export class SplitScreenUI {
     if (thiefHint && hud.thiefHint) {
       thiefHint.textContent = hud.thiefHint;
     }
+
+    const policeCompass = this.root.querySelector('#compass-p1');
+    if (policeCompass && hud.policeCompass) {
+      policeCompass.textContent = hud.policeCompass;
+    }
+
+    const thiefCompass = this.root.querySelector('#compass-p2');
+    if (thiefCompass && hud.thiefCompass) {
+      thiefCompass.textContent = hud.thiefCompass;
+    }
+  }
+
+  showCountdown(seconds: number, briefing?: string): void {
+    let el = this.root.querySelector('.countdown-overlay') as HTMLElement | null;
+    if (!el) {
+      el = document.createElement('div');
+      el.className = 'countdown-overlay';
+      this.root.appendChild(el);
+    }
+    el.innerHTML = `
+      <div class="countdown-number">${seconds}</div>
+      ${briefing ? `<div class="countdown-briefing">${briefing}</div>` : ''}
+    `;
+  }
+
+  updateCountdown(seconds: number): void {
+    const num = this.root.querySelector('.countdown-number');
+    if (num) num.textContent = String(seconds);
+  }
+
+  hideCountdown(): void {
+    this.root.querySelector('.countdown-overlay')?.remove();
   }
 
   bindRestart(onRestart: () => void): void {

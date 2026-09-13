@@ -46,6 +46,7 @@ export const CITY_POIS: POI[] = [
   { id: 'park', type: 'park', x: 22, z: 24, label: 'Park' },
   { id: 'shop', type: 'shop', x: -14, z: 18, label: 'Market' },
   { id: 'crime_alley', type: 'crime_location', x: 30, z: 8, label: 'Şüpheli Sokak' },
+  { id: 'back_alley', type: 'alley', x: -22, z: -6, label: 'Arka Sokak' },
   { id: 'hideout', type: 'hiding_spot', x: 26, z: -22, label: 'Saklanma Noktası' },
   { id: 'plaza', type: 'civilian_area', x: 0, z: 0, label: 'Meydan' },
 ];

@@ -10,7 +10,17 @@ Baba-oğul için tarayıcı tabanlı, low-poly polis/hırsız split-screen oyunu
 - **Havok Physics** altyapısı hazır (Milestone 2'de aktif)
 - **glTF/GLB** yükleme altyapısı (`AssetManager`)
 
-## Milestone 4 (Mevcut)
+## Milestone 5 (Mevcut)
+
+- [x] **Procedural vaka üretici** — rastgele olay yeri + kaçış hedefi, süre ve brifing
+- [x] Olay yeri inceleme hedefi (polis)
+- [x] Dünya işaretleri (kırmızı olay yeri, yeşil saklanma noktası)
+- [x] HUD pusula okları (polis → hırsız, hırsız → kaçış)
+- [x] 3-2-1 geri sayım + vaka brifingi
+- [x] Son 45 sn escalation uyarısı
+- [x] Vaka bazlı spawn (polis olay yerinde, hırsız kaçış yönünde)
+
+## Milestone 4
 
 - [x] **Polis vs Hırsız** oyun modu
 - [x] Vaka sistemi (hedefler, süre, kazanma/kaybetme)
@@ -95,8 +105,8 @@ Tam bp900 şablonu yerine **hibrit yaklaşım** kullanıldı:
 
 Bu sayede Milestone 2+ (animasyon, fizik, NPC, vaka sistemi) bp900 altyapısı üzerinde büyüyebilir.
 
-## Sonraki Adımlar (Milestone 5)
+## Sonraki Adımlar (Milestone 6)
 
-- Procedural vaka üretici
-- Event-driven escalation
-- Kanıt sistemi
+- Living city (gün/gece, hava)
+- Quaternius City kit entegrasyonu
+- Ses ve görsel polish
